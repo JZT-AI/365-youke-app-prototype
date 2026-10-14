@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+test('voice reminder defaults on, toggles both ways and retains state on page re-entry',()=>{
+  const html=readFileSync(new URL('../public/prototype.html',import.meta.url),'utf8');
+  const source=html.split('// Voice notification setting:')[1].split('// End voice notification setting.')[0];
+  let click;
+  const ctx=vm.createContext({iconPaths:{},icon:()=>'',pages:{notifications:()=>"<div class='my-menu'><div class='my-menu-row'><div class='switch on'></div></div></div>"},document:{addEventListener:(name,fn)=>{click=fn}}});
+  vm.runInContext('// Voice notification setting:'+source,ctx);
+  const render=()=>vm.runInContext('pages.notifications()',ctx);
+  assert.match(render(),/aria-checked='true'/);
+  assert.match(render(),/收到新线索或客户新消息时，通过语音播报提醒。/);
+  const control={classList:{toggle:(name,value)=>{control.on=value}},setAttribute:(name,value)=>{control[name]=value}};
+  const event={target:{closest:()=>control},preventDefault(){},stopImmediatePropagation(){}};
+  click(event);
+  assert.equal(control.on,false);assert.equal(control['aria-checked'],'false');
+  assert.match(render(),/aria-checked='false'/);
+  assert.match(render(),/<div class='switch on'><\/div>/);
+  click(event);assert.equal(control.on,true);assert.match(render(),/aria-checked='true'/);
+});
