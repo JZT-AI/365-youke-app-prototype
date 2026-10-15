@@ -815,7 +815,7 @@
       const nf=new Intl.NumberFormat('zh-CN',{maximumFractionDigits:8});
       const num=v=>nf.format(v), esc=v=>escapePlainText(String(v??''));
       let finMode='normal',finType='all',finCurrentOnly=false,finOrderType='all',finQuery='',finDates={from:'',to:''};
-      let finOrderDates={from:'',to:''},finRecordId='hold1',finOrderId='order1',finSettled=false,finExpiredHold=false,finOpsFree=false;
+      let finOrderDates={from:'',to:''},finRecordId='hold1',finOrderId='order1',finSettled=false,finExpiredHold=false;
       let finResetPosition=false;
       let finBusy=false,finOperation=0,finRefreshNotice='',finSheetOrigin=null;
       const finScroll=new Map(),finPages=new Set(['wallet','coinFlow','flowDetail','rechargeRecords','rechargeDetail','customers']);
@@ -832,16 +832,16 @@
         '149266':{name:'林小姐',route:'leadDetail',key:'lin',allocated:'2026-10-14 11:00',state:'生效中',settle:'已预扣',record:'hold1'},
         '149405':{name:'周先生',route:'permanentDetail',key:'zhou',allocated:'2026-10-12 10:00',state:'生效中',settle:'已扣款',record:'debit1'},
         '149423':{name:'王先生',route:'expiredDetail',key:'wang',allocated:'2026-10-12 13:00',state:'已失效',settle:'已返还',record:'return1'},
-        '149420':{name:'林小姐',route:'linOldDetail',key:'linOld',allocated:'2026-10-10 09:00',state:'已失效',settle:'历史关系免扣',record:'free1'}
+        '149420':{name:'林小姐',route:'linOldDetail',key:'linOld',allocated:'2026-10-10 09:00',state:'已失效',settle:'免扣',record:'free1'}
       };
       const baseRecords=[
         {id:'hold1',type:'hold',title:'线索预扣',time:'2026-10-14 11:00',lead:'149266',paid:1000,gift:200,available:-1200,reason:'本轮线索分配预扣',current:true},
         {id:'return1',type:'return',title:'线索返还',time:'2026-10-13 13:00',lead:'149423',paid:1000,gift:200,recovered:1000,lapsed:200,available:1000,reason:'客户未开口，服务结束',holdTime:'2026-10-12 13:00'},
         {id:'debit1',type:'debit',title:'线索扣款',time:'2026-10-13 10:20',lead:'149405',paid:1000,gift:200,available:0,reason:'客户有效开口，原预扣转扣款',holdTime:'2026-10-12 10:00'},
-        {id:'free1',type:'free',title:'历史关系免扣',time:'2026-10-13 09:00',lead:'149420',paid:0,gift:0,available:0,reason:'命中客户与经纪人的历史实扣关系'},
+        {id:'free1',type:'free',title:'免扣',time:'2026-10-13 09:00',lead:'149420',paid:0,gift:0,available:0,reason:'命中客户与经纪人的历史实扣关系'},
         {id:'expire1',type:'expire',title:'赠送币到期',time:'2026-10-13 00:00',paid:0,gift:200,available:-200,reason:'该笔赠送有客币已到期',source:'平台赠送',batch:'G001',end:'2026-10-13 00:00'},
         {id:'gift1',type:'gift',title:'平台赠送',time:'2026-10-12 15:30',paid:0,gift:400,available:400,reason:'平台运营赠送',source:'平台赠送',end:'2026-10-31 23:59'},
-        {id:'free2',type:'free',title:'运营免扣',time:'2026-10-12 10:00',paid:0,gift:0,available:0,reason:'平台运营主动免扣',lead:'149410',name:'张女士'},
+        {id:'free2',type:'free',title:'免扣',time:'2026-10-12 10:00',paid:0,gift:0,available:0,reason:'平台运营主动免扣',lead:'149410',name:'张女士'},
         {id:'fullReturn',type:'return',title:'线索返还',time:'2026-10-11 10:00',paid:600,gift:0,recovered:600,lapsed:0,available:600,reason:'未开口转派，原预扣已释放',lead:'149390',name:'赵先生',holdTime:'2026-10-10 10:00'},
         {id:'allExpired',type:'return',title:'线索返还',time:'2026-10-11 09:00',paid:0,gift:300,recovered:0,lapsed:300,available:0,reason:'未开口服务结束，赠送币已到期',lead:'149388',name:'陈女士',holdTime:'2026-10-10 09:00'},
         {id:'endedDebit',type:'debit',title:'线索扣款',time:'2026-10-10 11:00',paid:1500,gift:300,available:0,reason:'客户有效开口，原预扣转扣款',lead:'149380',name:'李先生',ended:true,holdTime:'2026-10-09 11:00'},
@@ -854,7 +854,7 @@
       const allRecords=()=>finMode==='empty'?[]:[...records(),...historyRecords()].sort((a,b)=>b.time.localeCompare(a.time));
       const currentRecord=()=>allRecords().find(r=>r.id===finRecordId&&!r.order);
       const nameOf=r=>leads[r.lead]?.name||r.name||'';
-      const labelOf=r=>r.id==='free1'&&finOpsFree?'运营免扣':r.title;
+      const labelOf=r=>r.title;
       const totalOf=r=>(r.paid||0)+(r.gift||0);
       const eventSign=r=>({hold:-1,debit:-1,return:1,free:0,expire:-1,gift:1,recharge:1})[r.type]||0;
       const signed=v=>v===0?'0':`${v>0?'+':'−'}${num(Math.abs(v))}`;
@@ -917,7 +917,7 @@
       function recordDetail(){
         const r=currentRecord();
         if(!r)return finScreen(stateBlock('empty',true),'有客币详情',{detail:true});
-        const reason=r.id==='free1'&&finOpsFree?'平台运营主动免扣':r.reason;
+        const reason=r.reason;
         let result='';
         if(r.type==='return')result=`<section class='detail-section fin-card'><h4>返还结果</h4>${pair('原预扣返还',num(totalOf(r)))}${pair('恢复可用',`${num(r.recovered)} 币`)}${pair('赠送币已过期',`${num(r.lapsed||0)} 币`)}<p class='fin-explanation'>${r.lapsed?'已过期部分不恢复可用。':'本次返还全部恢复可用。'}</p></section>`;
         const linked=leads[r.lead];
@@ -958,7 +958,7 @@
         .fin-card-history{display:inline-flex;align-items:center;gap:3px;min-height:28px;margin:-5px 0;padding:4px 0 4px 8px;border:0;background:none;color:#fff;font:inherit;font-size:11px;font-weight:400;cursor:pointer}
       `;document.head.appendChild(style);
       pages.wallet=()=>selectedCity==='xian'?wallet():finLegacyPages.wallet();pages.coinFlow=()=>selectedCity==='xian'?recordList():finLegacyPages.coinFlow();pages.flowDetail=()=>selectedCity==='xian'?recordDetail():finLegacyPages.flowDetail();pages.rechargeRecords=orderList;pages.rechargeDetail=orderDetail;
-      const settlementOptions=['已预扣','已扣款','已返还','历史关系免扣','运营免扣'];
+      const settlementOptions=['已预扣','已扣款','已返还','免扣'];
       const defaultCustomerFilters=()=>({service:[],follow:[],favorite:[],assigned:['全部'],active:['全部'],settlement:[]});
       const copyCustomerFilters=f=>Object.fromEntries(Object.entries(f).map(([k,v])=>[k,[...v]]));
       let finCustomerFilters=defaultCustomerFilters(),finCustomerDraft=copyCustomerFilters(finCustomerFilters),finCustomerQuery='',finCustomerQuick='all';
@@ -999,7 +999,7 @@
         t.content.querySelectorAll('.customer-card').forEach(card=>{
           const leadId=idByRoute[card.dataset.go],l=leads[leadId];if(!l)return;card.dataset.finCustomerLead=leadId;const activeMatch=card.querySelector('.customer-head .sub')?.textContent.match(/\d{2}-\d{2} \d{2}:\d{2}/);const activeTime=activeMatch?'2026-'+activeMatch[0]:'';const favorite=card.querySelector('[data-favorite]');if(favorite&&finFavoriteState.has(leadId))favorite.classList.toggle('on',finFavoriteState.get(leadId));
           const row=card.querySelector('.validity-row,.status-line');if(!row)return;
-          const label=leadId==='149420'&&finOpsFree?'运营免扣':l.settle;
+          const label=l.settle;
           const tag=document.createElement('button');tag.type='button';tag.className='validity-chip fin-customer-tag '+(label.includes('免扣')?'free':label==='已返还'?'return':'');tag.dataset.finRecord=l.record;tag.setAttribute('aria-label',`查看${l.name}${label}的有客币详情`);tag.innerHTML=esc(label)+icon('chevron',9);
           row.insertBefore(tag,row.children[1]||null);
           if(leadId==='149423')row.insertAdjacentHTML('afterend',`<p class='fin-customer-refund'>返还 1,200 币，其中 200 赠送币已过期</p>`);
@@ -1017,7 +1017,7 @@
       for(const [route,id] of Object.entries({leadDetail:'149266',permanentDetail:'149405',expiredDetail:'149423',linOldDetail:'149420'})){
         const original=pages[route];pages[route]=()=>{
           const t=document.createElement('template');t.innerHTML=original();const row=t.content.querySelector('.validity-row');
-          if(row){const l=leads[id],tag=document.createElement('span');tag.className='validity-chip fin-customer-tag';tag.textContent=id==='149420'&&finOpsFree?'运营免扣':l.settle;row.insertBefore(tag,row.children[1]||null);}
+          if(row){const l=leads[id],tag=document.createElement('span');tag.className='validity-chip fin-customer-tag';tag.textContent=l.settle;row.insertBefore(tag,row.children[1]||null);}
           const allocation=t.content.querySelector('.detail-allocation');if(allocation)allocation.textContent=`线索 ${id} · 分配 ${leads[id].allocated}`;
           return t.innerHTML.replaceAll('08-18 16:35','10-12 16:35').replaceAll('08-26 18:12','10-13 11:00').replaceAll('08-12 16:00','10-13 12:00');
         };
