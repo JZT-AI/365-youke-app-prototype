@@ -836,21 +836,23 @@
       };
       const baseRecords=[
         {id:'hold1',type:'hold',title:'线索预扣',time:'2026-10-14 11:00',lead:'149266',paid:1000,gift:200,available:-1200,reason:'本轮线索分配预扣',current:true},
-        {id:'return1',type:'return',title:'线索返还',time:'2026-10-13 13:00',lead:'149423',paid:1000,gift:200,recovered:1000,lapsed:200,available:1000,reason:'客户未开口，服务结束',holdTime:'2026-10-12 13:00'},
+        {id:'return1',type:'return',title:'线索返还',time:'2026-10-13 13:00',lead:'149423',paid:1000,gift:200,available:1200,giftEnd:'2026-10-12 23:59',reason:'客户未开口，服务结束',holdTime:'2026-10-12 13:00'},
+        {id:'returnExpiry1',type:'expire',title:'赠送币到期',time:'2026-10-13 13:01',lead:'149423',paid:0,gift:200,available:-200,reason:'线索返还后按赠送币有效期处理',source:'线索返还',end:'2026-10-12 23:59',relatedReturn:'return1'},
+        {id:'returnExpiry2',type:'expire',title:'赠送币到期',time:'2026-10-11 09:01',lead:'149388',name:'陈女士',paid:0,gift:300,available:-300,reason:'线索返还后按赠送币有效期处理',source:'线索返还',end:'2026-10-10 23:59',relatedReturn:'allExpired'},
         {id:'debit1',type:'debit',title:'线索扣款',time:'2026-10-13 10:20',lead:'149405',paid:1000,gift:200,available:0,reason:'客户有效开口，原预扣转扣款',holdTime:'2026-10-12 10:00'},
         {id:'free1',type:'free',title:'免扣',time:'2026-10-13 09:00',lead:'149420',paid:0,gift:0,available:0,reason:'命中客户与经纪人的历史实扣关系'},
         {id:'expire1',type:'expire',title:'赠送币到期',time:'2026-10-13 00:00',paid:0,gift:200,available:-200,reason:'该笔赠送有客币已到期',source:'平台赠送',batch:'G001',end:'2026-10-13 00:00'},
         {id:'gift1',type:'gift',title:'平台赠送',time:'2026-10-12 15:30',paid:0,gift:400,available:400,reason:'平台运营赠送',source:'平台赠送',end:'2026-10-31 23:59'},
         {id:'free2',type:'free',title:'免扣',time:'2026-10-12 10:00',paid:0,gift:0,available:0,reason:'平台运营主动免扣',lead:'149410',name:'张女士'},
-        {id:'fullReturn',type:'return',title:'线索返还',time:'2026-10-11 10:00',paid:600,gift:0,recovered:600,lapsed:0,available:600,reason:'未开口转派，原预扣已释放',lead:'149390',name:'赵先生',holdTime:'2026-10-10 10:00'},
-        {id:'allExpired',type:'return',title:'线索返还',time:'2026-10-11 09:00',paid:0,gift:300,recovered:0,lapsed:300,available:0,reason:'未开口服务结束，赠送币已到期',lead:'149388',name:'陈女士',holdTime:'2026-10-10 09:00'},
+        {id:'fullReturn',type:'return',title:'线索返还',time:'2026-10-11 10:00',paid:600,gift:0,available:600,reason:'未开口转派，原预扣已释放',lead:'149390',name:'赵先生',holdTime:'2026-10-10 10:00'},
+        {id:'allExpired',type:'return',title:'线索返还',time:'2026-10-11 09:00',paid:0,gift:300,available:300,giftEnd:'2026-10-10 23:59',reason:'未开口，服务结束',lead:'149388',name:'陈女士',holdTime:'2026-10-10 09:00'},
         {id:'endedDebit',type:'debit',title:'线索扣款',time:'2026-10-10 11:00',paid:1500,gift:300,available:0,reason:'客户有效开口，原预扣转扣款',lead:'149380',name:'李先生',ended:true,holdTime:'2026-10-09 11:00'},
         {id:'gift2',type:'gift',title:'入驻赠送',time:'2026-10-09 09:00',paid:0,gift:600,available:600,reason:'经纪人入驻赠送',source:'入驻赠送',end:'2026-11-30 23:59'},
         {id:'migration',type:'gift',title:'历史余额迁移',time:'2026-10-08 09:00',paid:0,gift:800,available:800,reason:'原有有客币余额迁移',source:'历史余额迁移',end:'2026-11-30 23:59'}
       ];
       const orderNow=o=>({...o,pending:o.id==='pending'?!finSettled:!!o.pending,paymentKnown:o.id==='pending'?finSettled:o.paymentKnown,arrived:o.id==='pending'&&finSettled?'2026-10-14 11:10':o.arrived});
       function records(){if(finMode==='empty')return[];return [...baseRecords,...orders.map(orderNow).filter(o=>!o.pending).map(o=>({id:'credit-'+o.id,type:'recharge',title:'套餐充值到账',time:o.arrived||o.time,paid:o.paid,gift:o.gift,available:o.paid+o.gift,order:o.id,reason:'套餐充值，含付费有客币及套餐赠送',source:'套餐充值 · 付费与赠送到账'}))].sort((a,b)=>b.time.localeCompare(a.time))}
-      function historyRecords(){return baseRecords.filter(r=>r.holdTime&&(r.type==='debit'||r.type==='return')).map(r=>({...r,id:'prior-'+r.id,type:'hold',title:'线索预扣',time:r.holdTime,paid:r.paid,gift:r.gift,available:-totalOf(r),reason:'本轮线索分配预扣',current:false,outcome:r.type==='debit'?'已转扣款':'已返还',parent:r.id,ended:false,recovered:undefined,lapsed:undefined}))}
+      function historyRecords(){return baseRecords.filter(r=>r.holdTime&&(r.type==='debit'||r.type==='return')).map(r=>({...r,id:'prior-'+r.id,type:'hold',title:'线索预扣',time:r.holdTime,paid:r.paid,gift:r.gift,available:-totalOf(r),reason:'本轮线索分配预扣',current:false,outcome:r.type==='debit'?'已转扣款':'已返还',parent:r.id,ended:false,giftEnd:undefined}))}
       const allRecords=()=>finMode==='empty'?[]:[...records(),...historyRecords()].sort((a,b)=>b.time.localeCompare(a.time));
       const currentRecord=()=>allRecords().find(r=>r.id===finRecordId&&!r.order);
       const nameOf=r=>leads[r.lead]?.name||r.name||'';
@@ -859,7 +861,7 @@
       const eventSign=r=>({hold:-1,debit:-1,return:1,free:0,expire:-1,gift:1,recharge:1})[r.type]||0;
       const signed=v=>v===0?'0':`${v>0?'+':'−'}${num(Math.abs(v))}`;
       const amountTone=v=>v>0?'fin-increase':v<0?'fin-decrease':'fin-neutral';
-      const eventAmount=r=>r.type==='return'?r.recovered:eventSign(r)*totalOf(r);
+      const eventAmount=r=>eventSign(r)*totalOf(r);
       const eventTone=r=>r.type==='debit'?'fin-deduction':amountTone(eventAmount(r));
       const kindIcon={hold:'clock',debit:'wallet',return:'back',free:'shield',expire:'alert',gift:'coin',recharge:'coin'};
       const balances=()=>finMode==='empty'?{paid:0,gift:0,heldPaid:0,heldGift:0}:{paid:17600+(finSettled?10000:0),gift:2800+(finSettled?2000:0),heldPaid:1000,heldGift:200};
@@ -886,7 +888,7 @@
       function recordRow(r,compact=false){
         const caption=r.lead?nameOf(r):(r.source||r.reason);
         let extra='';
-        if(r.type==='return')extra=`<div class='fin-result fin-result-text'>恢复可用 ${num(r.recovered)} 币${r.lapsed?`，已过期 ${num(r.lapsed)} 币`:''}</div>`;
+        if(r.type==='return'&&r.giftEnd)extra=`<div class='fin-result fin-result-text'>赠送币到期 ${esc(r.giftEnd)}</div>`;
         if(r.type==='hold')extra=`<span class='tag'>${r.current?'当前预扣':`${r.outcome||'已结算'} · 已不占用`}</span>`;
         if(r.ended)extra+=`<span class='tag'>服务已结束</span>`;
         const mark=`<span class='ledger-icon ${r.type==='gift'||r.type==='recharge'?'gift':''}'>${icon(kindIcon[r.type],18)}</span>`;
@@ -919,15 +921,14 @@
         if(!r)return finScreen(stateBlock('empty',true),'有客币详情',{detail:true});
         const reason=r.reason;
         let result='';
-        if(r.type==='return')result=`<section class='detail-section fin-card'><h4>返还结果</h4>${pair('原预扣返还',num(totalOf(r)))}${pair('恢复可用',`${num(r.recovered)} 币`)}${pair('赠送币已过期',`${num(r.lapsed||0)} 币`)}<p class='fin-explanation'>${r.lapsed?'已过期部分不恢复可用。':'本次返还全部恢复可用。'}</p></section>`;
         const linked=leads[r.lead];
         const association=r.lead?`<section class='detail-section fin-card'><h4>关联线索</h4><button class='fin-associated-lead' data-fin-view-lead='${r.lead}'><span><b>${esc(nameOf(r))}</b><small>线索 ${r.lead} · 查看对应轮次</small></span>${icon('chevron',16)}</button>${linked?pair('分配时间',linked.allocated):''}${linked?pair('服务状态',linked.state):r.ended?pair('服务状态','服务已结束'):''}</section>`:'';
         const outcome=r.type==='hold'?pair('预扣状态',r.current?'当前预扣':`${r.outcome} · 已不占用`):'';
-        return finScreen(`<div class='content fin-page'><section class='state fin-detail-hero'><span class='fin-detail-mark ${toneOf(r)}'>${icon(kindIcon[r.type],25)}</span><h3>${esc(labelOf(r))}</h3><div class='fin-detail-number ${eventTone(r)}'>${signed(eventAmount(r))}</div></section><section class='detail-section fin-card'><h4>${r.type==='return'?'原预扣返还构成':'币种构成'}</h4><div class='${r.type==='debit'?'fin-debit-parts':''}'>${parts(r.paid,r.gift,r.type==='return'?0:eventSign(r))}</div>${pair('可用余额变化',r.available===0?'0（无变化）':signed(r.available),'',amountTone(r.available))}${r.type==='free'?`<p class='fin-explanation'>免扣未实际消费，付费与赠送数量均为 0。</p>`:''}</section>${result}<section class='detail-section fin-card'><h4>记录信息</h4>${pair('发生时间',r.time)}${pair('原因',reason)}${outcome}${r.holdTime&&r.type!=='hold'?pair('原预扣时间',r.holdTime):''}${r.source?pair('来源',r.source):''}${r.end?pair('到期时间',r.end):''}${pair('记录编号','LS-'+r.id,'LS-'+r.id)}${r.batch?pair('赠送批次',r.batch):''}</section>${association}</div>`,'有客币详情',{detail:true});
+        return finScreen(`<div class='content fin-page'><section class='state fin-detail-hero'><span class='fin-detail-mark ${toneOf(r)}'>${icon(kindIcon[r.type],25)}</span><h3>${esc(labelOf(r))}</h3><div class='fin-detail-number ${eventTone(r)}'>${signed(eventAmount(r))}</div></section><section class='detail-section fin-card'><h4>币种构成</h4><div class='${r.type==='debit'?'fin-debit-parts':''}'>${parts(r.paid,r.gift,eventSign(r))}</div>${r.type==='return'&&r.giftEnd?pair('赠送币到期时间',r.giftEnd):''}${pair('可用余额变化',r.available===0?'0（无变化）':signed(r.available),'',amountTone(r.available))}${r.type==='free'?`<p class='fin-explanation'>免扣未实际消费，付费与赠送数量均为 0。</p>`:''}</section>${result}<section class='detail-section fin-card'><h4>记录信息</h4>${pair('发生时间',r.time)}${pair('原因',reason)}${outcome}${r.holdTime&&r.type!=='hold'?pair('原预扣时间',r.holdTime):''}${r.relatedReturn?pair('关联返还记录','LS-'+r.relatedReturn):''}${r.source?pair('来源',r.source):''}${r.end?pair('到期时间',r.end):''}${pair('记录编号','LS-'+r.id,'LS-'+r.id)}${r.batch?pair('赠送批次',r.batch):''}</section>${association}</div>`,'有客币详情',{detail:true});
       }
       function expiryBody(){
         const b=balances();const rows=b.gift?[{amount:400,end:'2026-10-31 23:59',source:'平台赠送'},{amount:400,end:'2026-11-30 23:59',source:'历史余额迁移'},{amount:2000,end:'2027-04-13 23:59',source:'套餐赠送'},...(finSettled?[{amount:2000,end:'2027-04-14 23:59',source:'套餐赠送'}]:[])]:[];
-        return `<div class='fin-expiry-summary'><span>可用赠送有客币</span><strong>${num(b.gift)}<small> 币</small></strong></div><h5 class='fin-subhead'>按到期时间排序</h5>${rows.map(r=>`<div class='fin-expiry-row'><div><b>${num(r.amount)}<small> 币</small></b><span>${r.source}</span></div><div><b>${r.end}</b><span>到期</span></div></div>`).join('')||`<p class='fin-small-empty'>暂无可用赠送币</p>`}${b.heldGift?`<section class='fin-held-expiry'><h5>预扣中赠送币 · ${num(b.heldGift)} 币</h5><p>${finExpiredHold?'已到期 · 预扣中':'到期时间：2026-10-15 23:59'}</p><span>不计入可用余额；若返还时已过期，不恢复可用。</span></section>`:''}<p class='fin-footer-note'>付费有客币无有效期。</p>`;
+        return `<div class='fin-expiry-summary'><span>可用赠送有客币</span><strong>${num(b.gift)}<small> 币</small></strong></div><h5 class='fin-subhead'>按到期时间排序</h5>${rows.map(r=>`<div class='fin-expiry-row'><div><b>${num(r.amount)}<small> 币</small></b><span>${r.source}</span></div><div><b>${r.end}</b><span>到期</span></div></div>`).join('')||`<p class='fin-small-empty'>暂无可用赠送币</p>`}${b.heldGift?`<section class='fin-held-expiry'><h5>预扣中赠送币 · ${num(b.heldGift)} 币</h5><p>${finExpiredHold?'已到期 · 预扣中':'到期时间：2026-10-15 23:59'}</p><span>不计入可用余额；返还后按赠送币有效期处理，到期失效单独记账。</span></section>`:''}<p class='fin-footer-note'>付费有客币无有效期。</p>`;
       }
       function openExpiry(){
         finSheetOrigin=current;
@@ -1002,7 +1003,6 @@
           const label=l.settle;
           const tag=document.createElement('button');tag.type='button';tag.className='validity-chip fin-customer-tag '+(label.includes('免扣')?'free':label==='已返还'?'return':'');tag.dataset.finRecord=l.record;tag.setAttribute('aria-label',`查看${l.name}${label}的有客币详情`);tag.innerHTML=esc(label)+icon('chevron',9);
           row.insertBefore(tag,row.children[1]||null);
-          if(leadId==='149423')row.insertAdjacentHTML('afterend',`<p class='fin-customer-refund'>返还 1,200 币，其中 200 赠送币已过期</p>`);
           const sub=card.querySelector('.customer-head .sub');if(sub)sub.textContent=`线索 ${leadId} · ${l.allocated.slice(5)}`;
           if(!customerMatches(card,l,label,activeTime))card.remove();
         });
@@ -1027,7 +1027,7 @@
         filter:['客户筛选','服务、结算、跟进、收藏与时间条件',['结算状态可多选','条件取交集'],'结算状态默认全部；同组多选满足任一项，跨组与搜索取交集。确定后生效，重置后需确定；返回取消本次修改。'],
         customers:['客户列表 · 结算状态','F01 · 在原客户卡片中补充本轮结算结果',['服务与结算分开','返还失效提示'],'结算标签位于服务状态之后。点击标签打开本轮对应财务详情，点击客户卡片沿用线索详情路径；返回保留客户列表条件与位置。'],
         coinFlow:['有客币明细','F05 · 账户事件摘要与条件查询',['线索直达原轮次','财务详情可追溯'],'列表展示事件、数量、客户、时间及关键结果。点击客户与线索编号直接查看对应轮次；其余区域进入财务详情，返回保留查询条件和位置。'],
-        flowDetail:['有客币详情','F06 · 单笔事件的原因、构成与关联信息',['结算结果可追溯','查看对应轮次线索'],'详情解释预扣、实扣、返还、免扣、赠送和到期结果；返还区分原数量、恢复可用与失效，线索入口进入本笔所属轮次。'],
+        flowDetail:['有客币详情','F06 · 单笔事件的原因、构成与关联信息',['结算结果可追溯','查看对应轮次线索'],'详情解释预扣、实扣、返还、免扣、赠送和到期结果；返还按原数量展示赠送币到期时间，失效通过对应的独立到期记录表达；线索入口进入本笔所属轮次。'],
         rechargeRecords:['充值记录','F03 · 到账总量优先，实际支付金额次要展示',['已到账 / 处理中','币种拆分'],'处理中使用预计到账，不推断已支付，不提供重复支付按钮。'],
         rechargeDetail:['充值详情','F04 · 到账构成、实际有效期与订单信息',['付费无有效期','到账状态刷新'],'展示当前订单的支付和到账结果；本页不展示该充值订单下的线索消耗。'],
       });
