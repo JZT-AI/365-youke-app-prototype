@@ -892,14 +892,14 @@
         if(r.released)extra+=`<div class='fin-result'>原预扣已释放 · 恢复可用 <b class='${amountTone(r.recovered)}'>${signed(r.recovered)}</b></div>`;
         const mark=`<span class='ledger-icon ${r.type==='gift'||r.type==='recharge'?'gift':''}'>${icon(kindIcon[r.type],18)}</span>`;
         const leadLink=r.lead?`<button class='fin-list-lead' data-fin-view-lead='${r.lead}' aria-label='查看${esc(nameOf(r))}的线索${r.lead}'>${esc(nameOf(r))} · 线索 ${r.lead} ${icon('chevron',11)}</button>`:`<p>${esc(caption)}</p>`;
-        const content=`${mark}<div class='ledger-copy'><b>${esc(labelOf(r))}</b>${leadLink}${extra}<time class='fin-row-time'>${r.time}</time></div>`;
-        if(r.lead)return `<article class='ledger-row fin-row-button fin-record-row' data-fin-record='${r.id}'>${content}<button class='ledger-amount fin-record-amount ${eventTone(r)}' data-fin-record='${r.id}' aria-label='查看${esc(nameOf(r))}${esc(labelOf(r))}的财务详情'>${signed(eventAmount(r))}</button></article>`;
-        return `<button class='ledger-row fin-row-button' data-fin-record='${r.id}'>${content}<span class='ledger-amount fin-record-amount ${eventTone(r)}'>${signed(eventAmount(r))}</span></button>`;
+        const content=`${mark}<div class='ledger-copy'><b>${esc(labelOf(r))}</b>${leadLink}${extra}</div>`;
+        if(r.lead)return `<article class='ledger-row fin-row-button fin-record-row' data-fin-record='${r.id}'>${content}<div class='fin-amount-stack'><button class='ledger-amount fin-record-amount ${eventTone(r)}' data-fin-record='${r.id}' aria-label='查看${esc(nameOf(r))}${esc(labelOf(r))}的财务详情'>${signed(eventAmount(r))}</button><time class='fin-row-time'>${r.time.slice(5)}</time></div></article>`;
+        return `<button class='ledger-row fin-row-button' data-fin-record='${r.id}'>${content}<span class='fin-amount-stack'><span class='ledger-amount fin-record-amount ${eventTone(r)}'>${signed(eventAmount(r))}</span><time class='fin-row-time'>${r.time.slice(5)}</time></span></button>`;
       }
       function wallet(){
         const b=balances();
         const expiry=menuRow('clock','赠送币有效期',b.gift?'最近到期 400 币 · 2026-10-31':'暂无可用赠送币','coinExpiry','','orange').replace("data-go='coinExpiry'",'data-fin-expiry');
-        return finScreen(`<div class='wallet-page compact'><section class='coin-glass compact'><div class='coin-glass-head'><span>可用余额</span><span class='coin-symbol'>${icon('coin',18)}</span></div><div class='coin-balance'>${num(b.paid+b.gift)}<small>有客币</small><button class='fin-recharge' data-fin-purchase>${icon('plus',13)}充值 ${icon('chevron',12)}</button></div><div class='coin-glass-foot'><span>付费可用<b>${num(b.paid)}</b></span><span>赠送可用<b>${num(b.gift)}</b></span><span>当前预扣<b>${num(b.heldPaid+b.heldGift)}</b></span></div></section><button class='benefit-card fin-held-card' data-fin-current-holds><span class='benefit-head'><span class='benefit-icon'>${icon('clock',20)}</span><span><b>预扣构成</b><span class='fin-held-sub'>付费 ${num(b.heldPaid)} · 赠送 ${num(b.heldGift)}</span></span><span class='fin-held-arrow'>${icon('chevron',15)}</span></span><span class='fin-held-note'>预扣不包含在可用余额中</span></button><section class='wallet-section'><div class='my-menu'>${expiry}${menuRow('coin','充值记录','','rechargeRecords','','orange')}${menuRow('file','有客币明细','','coinFlow','','gray')}</div></section><section class='wallet-section'><div class='wallet-section-head'><h4>最近变动</h4><button data-fin-all-records>查看全部 ›</button></div><div class='ledger-list'>${records().slice(0,3).map(r=>recordRow(r,true)).join('')||`<div class='empty'>暂无有客币明细</div>`}</div></section><p class='fin-footer-note'>付费有客币无有效期，赠送币有效期按实际记录展示。</p></div>`,'有客币',{home:true});
+        return finScreen(`<div class='wallet-page compact'><section class='coin-glass compact'><div class='coin-glass-head'><span>可用余额</span><span class='coin-symbol'>${icon('coin',18)}</span></div><div class='coin-balance'>${num(b.paid+b.gift)}<small>有客币</small><button class='fin-recharge' data-fin-purchase>${icon('plus',13)}充值 ${icon('chevron',12)}</button></div><div class='coin-glass-foot'><span>付费可用<b>${num(b.paid)}</b></span><span>赠送可用<b>${num(b.gift)}</b></span></div></section><button class='benefit-card fin-held-card' data-fin-current-holds><span class='benefit-head'><span class='benefit-icon'>${icon('clock',20)}</span><span><b>预扣构成</b><span class='fin-held-sub'>付费 ${num(b.heldPaid)} · 赠送 ${num(b.heldGift)}</span></span><strong class='fin-held-total'>${num(b.heldPaid+b.heldGift)}</strong><span class='fin-held-arrow'>${icon('chevron',15)}</span></span><span class='fin-held-note'>预扣不包含在可用余额中</span></button><section class='wallet-section'><div class='my-menu'>${expiry}${menuRow('coin','充值记录','','rechargeRecords','','orange')}</div></section><section class='wallet-section'><div class='wallet-section-head'><h4>有客币明细</h4><button data-fin-all-records>查看全部 ›</button></div><div class='ledger-list'>${records().slice(0,3).map(r=>recordRow(r,true)).join('')||`<div class='empty'>暂无有客币明细</div>`}</div></section><p class='fin-footer-note'>付费有客币无有效期，赠送币有效期按实际记录展示。</p></div>`,'有客币',{home:true});
       }
       function recordList(){
         const query=finQuery.trim().toLowerCase();
@@ -947,24 +947,67 @@
         .fin-associated-lead{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;border:0;background:transparent;color:var(--ink);padding:8px 0 12px;font:inherit;cursor:pointer}.fin-associated-lead b{display:block;font-size:13px}.fin-associated-lead small{display:block;font-size:11px;color:var(--brand);margin-top:7px;line-height:1.7}.fin-associated-lead>svg{color:var(--muted);flex-shrink:0}.fin-related-record{margin:12px 0 0;display:flex;align-items:center;justify-content:center;gap:5px}
         .fin-wallet-actions{display:flex;align-items:center;gap:3px}.fin-record-row{margin:0;cursor:pointer}.fin-list-lead{display:inline-flex;align-items:center;gap:3px;max-width:100%;min-height:30px;padding:3px 0;border:0;background:transparent;color:var(--brand);font:inherit;font-size:11px;text-align:left;cursor:pointer}.fin-list-lead svg{flex-shrink:0}.fin-record-open{display:grid;place-items:center;flex-shrink:0;min-width:24px;min-height:44px;padding:0;border:0;background:transparent;color:var(--muted);cursor:pointer}
         .fin-customer-tag[data-fin-record]{border:0;cursor:pointer;font-family:inherit;gap:2px}.fin-customer-tag[data-fin-record]:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-        .fin-scope .fin-increase{color:var(--green)}.fin-scope .fin-decrease{color:#d64536}.fin-scope .fin-neutral{color:var(--ink2)}.fin-scope .fin-row-title .ledger-amount{font-size:18px;font-weight:800;line-height:1.35;font-variant-numeric:tabular-nums}.fin-scope .fin-detail-number{font-size:36px;font-weight:850;line-height:1.3;font-variant-numeric:tabular-nums}.fin-scope .fin-order-quantity{font-size:28px;font-variant-numeric:tabular-nums}.fin-scope .fin-row-title{align-items:flex-start}.fin-scope .fin-result b{font-size:12px}.fin-scope .fin-kv>.fin-increase,.fin-scope .fin-kv>.fin-decrease{font-weight:700}
+        .fin-scope .fin-increase{color:var(--green)}.fin-scope .fin-decrease{color:#172033}.fin-scope .fin-neutral{color:var(--ink2)}.fin-scope .fin-row-title .ledger-amount{font-size:18px;font-weight:800;line-height:1.35;font-variant-numeric:tabular-nums}.fin-scope .fin-detail-number{font-size:36px;font-weight:850;line-height:1.3;font-variant-numeric:tabular-nums}.fin-scope .fin-order-quantity{font-size:28px;font-variant-numeric:tabular-nums}.fin-scope .fin-row-title{align-items:flex-start}.fin-scope .fin-result b{font-size:12px}.fin-scope .fin-kv>.fin-increase,.fin-scope .fin-kv>.fin-decrease{font-weight:700}
         .fin-scope .fin-row-button{align-items:center;gap:10px}.fin-scope .fin-row-button .ledger-copy{flex:1;min-width:0}.fin-scope .fin-row-button .ledger-copy>b{display:block;margin-bottom:2px}.fin-scope .fin-row-button .fin-list-lead{display:flex;width:max-content;max-width:100%}.fin-scope .fin-record-amount{display:block;align-self:center;flex-shrink:0;margin-left:auto;padding:8px 0 8px 4px;border:0;background:transparent;text-align:right;white-space:nowrap;font-size:18px;font-weight:800;line-height:1.35;font-variant-numeric:tabular-nums}.fin-scope .fin-deduction,.fin-scope .fin-debit-parts .fin-decrease{color:#172033}
+        .fin-filter-active{color:var(--brand)}
+        .fin-scope .coin-glass-foot>span{flex:1}.fin-scope .coin-glass-foot>span:last-child{text-align:right}.fin-held-total{margin-left:auto;font-size:22px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}.fin-held-card .fin-held-arrow{margin-left:5px}.fin-amount-stack{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;align-self:center;gap:5px;flex-shrink:0;margin-left:auto}.fin-scope .fin-amount-stack .fin-record-amount{align-self:auto;margin:0;padding:0}.fin-amount-stack .fin-row-time{margin:0;white-space:nowrap;font-size:10px}
       `;document.head.appendChild(style);
       pages.wallet=()=>selectedCity==='xian'?wallet():finLegacyPages.wallet();pages.coinFlow=()=>selectedCity==='xian'?recordList():finLegacyPages.coinFlow();pages.flowDetail=()=>selectedCity==='xian'?recordDetail():finLegacyPages.flowDetail();pages.rechargeRecords=orderList;pages.rechargeDetail=orderDetail;
+      const settlementOptions=['已预扣','已扣款','已返还','历史关系免扣','运营免扣'];
+      const defaultCustomerFilters=()=>({service:[],follow:[],favorite:[],assigned:['全部'],active:['全部'],settlement:[]});
+      const copyCustomerFilters=f=>Object.fromEntries(Object.entries(f).map(([k,v])=>[k,[...v]]));
+      let finCustomerFilters=defaultCustomerFilters(),finCustomerDraft=copyCustomerFilters(finCustomerFilters),finCustomerQuery='',finCustomerQuick='all';
+      const finFavoriteState=new Map();
+      const customerFilterCount=()=>Object.values(finCustomerFilters).filter(v=>v.length&&v[0]!=='全部').length;
+      function customerTimeMatch(value,ranges){
+        const range=ranges[0]||'全部';if(range==='全部')return true;if(!value)return false;
+        const day=value.slice(0,10),today='2026-10-14',delta=Math.floor((Date.parse(today+'T12:00:00Z')-Date.parse(day+'T12:00:00Z'))/86400000);
+        return range==='今天'?delta===0:range==='昨天'?delta===1:range==='最近7天'?delta>=0&&delta<7:range==='最近30天'?delta>=0&&delta<30:true;
+      }
+      function customerMatches(card,l,label,activeTime){
+        const f=finCustomerFilters,text=card.textContent,service=card.querySelector('.validity-chip')?.textContent.trim();
+        if(f.settlement.length&&!f.settlement.includes(label))return false;
+        if(f.service.length&&!f.service.includes(service))return false;
+        if(f.follow.length&&!f.follow.some(v=>text.includes({带访:'已到访',加微信:'已加微信',成交:'已成交'}[v]||v)))return false;
+        if(f.favorite.length&&!card.querySelector('[data-favorite]')?.classList.contains('on'))return false;
+        if(!customerTimeMatch(l.allocated,f.assigned)||!customerTimeMatch(activeTime,f.active))return false;
+        if(finCustomerQuery.trim()&&!text.toLowerCase().includes(finCustomerQuery.trim().toLowerCase()))return false;
+        return true;
+      }
+      const finFilterBase=pages.filter;
+      pages.filter=()=>{
+        if(selectedCity!=='xian')return finFilterBase();
+        const t=document.createElement('template');t.innerHTML=finFilterBase();
+        const keys=['service','follow','favorite','assigned','active'];
+        t.content.querySelectorAll('.filter-block').forEach((block,index)=>{const key=keys[index];block.querySelectorAll('.choice').forEach(button=>{button.dataset.finCustomerChoice=key;button.dataset.finCustomerValue=button.textContent.trim();button.classList.toggle('on',finCustomerDraft[key].includes(button.dataset.finCustomerValue));button.setAttribute('aria-pressed',String(button.classList.contains('on')));})});
+        const section=document.createElement('div');section.className='filter-block';section.innerHTML=`<h4>结算状态 <small>可多选</small></h4><div class='filter-grid'>${['全部',...settlementOptions].map(label=>`<button class='choice ${label==='全部'?!finCustomerDraft.settlement.length?'on':'':finCustomerDraft.settlement.includes(label)?'on':''}' data-fin-customer-choice='settlement' data-fin-customer-value='${label}' aria-pressed='${label==='全部'?!finCustomerDraft.settlement.length:finCustomerDraft.settlement.includes(label)}'>${label}</button>`).join('')}</div>`;
+        const service=t.content.querySelector('.filter-block');service.after(section);
+        const apply=t.content.querySelector('.filter-actions .primary');apply.removeAttribute('data-go');apply.setAttribute('data-fin-customer-apply','');
+        const reset=t.content.querySelector('[data-reset-filter]');reset.removeAttribute('data-reset-filter');reset.setAttribute('data-fin-customer-reset','');
+        return t.innerHTML;
+      };
       const finCustomersBase=pages.customers;
       pages.customers=()=>{
         if(selectedCity!=='xian')return finCustomersBase();
         const t=document.createElement('template');t.innerHTML=finCustomersBase();
         const idByRoute={leadDetail:'149266',permanentDetail:'149405',expiredDetail:'149423',linOldDetail:'149420'};
         t.content.querySelectorAll('.customer-card').forEach(card=>{
-          const leadId=idByRoute[card.dataset.go],l=leads[leadId];if(!l)return;
+          const leadId=idByRoute[card.dataset.go],l=leads[leadId];if(!l)return;card.dataset.finCustomerLead=leadId;const activeMatch=card.querySelector('.customer-head .sub')?.textContent.match(/\d{2}-\d{2} \d{2}:\d{2}/);const activeTime=activeMatch?'2026-'+activeMatch[0]:'';const favorite=card.querySelector('[data-favorite]');if(favorite&&finFavoriteState.has(leadId))favorite.classList.toggle('on',finFavoriteState.get(leadId));
           const row=card.querySelector('.validity-row,.status-line');if(!row)return;
           const label=leadId==='149420'&&finOpsFree?'运营免扣':l.settle;
           const tag=document.createElement('button');tag.type='button';tag.className='validity-chip fin-customer-tag '+(label.includes('免扣')?'free':label==='已返还'?'return':'');tag.dataset.finRecord=l.record;tag.setAttribute('aria-label',`查看${l.name}${label}的有客币详情`);tag.innerHTML=esc(label)+icon('chevron',9);
           row.insertBefore(tag,row.children[1]||null);
           if(leadId==='149423')row.insertAdjacentHTML('afterend',`<p class='fin-customer-refund'>返还 1,200 币，其中 200 赠送币已过期</p>`);
           const sub=card.querySelector('.customer-head .sub');if(sub)sub.textContent=`线索 ${leadId} · ${l.allocated.slice(5)}`;
-        });return t.innerHTML;
+          if(!customerMatches(card,l,label,activeTime))card.remove();
+        });
+        const beforeQuick=[...t.content.querySelectorAll('.customer-card')],quickCounts=[beforeQuick.length,beforeQuick.filter(card=>card.querySelector('.action-hint:not(.feedback)')).length,beforeQuick.filter(card=>card.querySelector('.action-hint.feedback')).length];
+        const quickKeys=['all','reply','feedback'];t.content.querySelectorAll('.customer-tabs .chip').forEach((button,index)=>{button.dataset.finCustomerQuick=quickKeys[index];button.classList.toggle('on',finCustomerQuick===quickKeys[index]);if(customerFilterCount()||finCustomerQuery)button.textContent=`${['全部','待首次回复','待反馈'][index]} ${quickCounts[index]}`;});
+        beforeQuick.forEach(card=>{if(finCustomerQuick==='reply'&&!card.querySelector('.action-hint:not(.feedback)')||finCustomerQuick==='feedback'&&!card.querySelector('.action-hint.feedback'))card.remove();});
+        const search=t.content.querySelector('.search-row input');if(search){search.setAttribute('data-fin-customer-search','');search.setAttribute('value',finCustomerQuery);}
+        const filter=t.content.querySelector('.filter-outside');if(filter&&customerFilterCount()){filter.classList.add('fin-filter-active');filter.querySelector('span').textContent=`筛选(${customerFilterCount()})`;}
+        if(!t.content.querySelector('.customer-card'))t.content.querySelector('.search-row').insertAdjacentHTML('afterend',`<div class='fin-empty' role='status'><span>${icon('users',30)}</span><h4>当前条件下暂无客户</h4><p>可调整筛选条件或搜索内容后查看。</p><button class='secondary' data-fin-customer-clear>清空筛选</button></div>`);
+        return t.innerHTML;
       };
       for(const [route,id] of Object.entries({leadDetail:'149266',permanentDetail:'149405',expiredDetail:'149423',linOldDetail:'149420'})){
         const original=pages[route];pages[route]=()=>{
@@ -975,7 +1018,8 @@
         };
       }
       Object.assign(meta,{
-        wallet:['有客币首页','F02 · 当前城市的可用余额、预扣与最近变动',['可用不重复减预扣','当前城市账户'],'付费可用＋赠送可用＝可用余额。当前预扣单独展示，点击可查看仍在占用的预扣。'],
+        wallet:['有客币首页','F02 · 当前城市的可用余额、预扣与最近变动',['可用不重复减预扣','当前城市账户'],'付费可用＋赠送可用＝可用余额。预扣总数及两类构成集中在预扣卡片，点击可查看当前占用。'],
+        filter:['客户筛选','服务、结算、跟进、收藏与时间条件',['结算状态可多选','条件取交集'],'结算状态默认全部；同组多选满足任一项，跨组与搜索取交集。确定后生效，重置后需确定；返回取消本次修改。'],
         customers:['客户列表 · 结算状态','F01 · 在原客户卡片中补充本轮结算结果',['服务与结算分开','返还失效提示'],'结算标签位于服务状态之后。点击标签打开本轮对应财务详情，点击客户卡片沿用线索详情路径；返回保留客户列表条件与位置。'],
         coinFlow:['有客币明细','F05 · 账户事件摘要与条件查询',['线索直达原轮次','财务详情可追溯'],'列表展示事件、数量、客户、时间及关键结果。点击客户与线索编号直接查看对应轮次；其余区域进入财务详情，返回保留查询条件和位置。'],
         flowDetail:['有客币详情','F06 · 单笔事件的原因、构成与关联信息',['结算结果可追溯','查看对应轮次线索'],'详情解释预扣、实扣、返还、免扣、赠送和到期结果；返还区分原数量、恢复可用与失效，线索入口进入本笔所属轮次。'],
@@ -990,6 +1034,7 @@
       const baseGo=go;
       go=function(id,push=true){
         if(id==='waiverRecords'){finType='free';id='coinFlow'}
+        if(id==='filter'&&current!=='filter')finCustomerDraft=copyCustomerFilters(finCustomerFilters);
         const reset=finResetPosition;finResetPosition=false;
         if(finPages.has(current))finScroll.set(`${selectedCity}:${current}`,screenEl.scrollTop);
         baseGo(id,push);screenEl.classList.toggle('fin-scope',finPages.has(id));
@@ -997,7 +1042,7 @@
         if(finPages.has(id))screenEl.scrollTop=finScroll.get(`${selectedCity}:${id}`)||0;
       };
       const oldBack=back;back=function(){if(sheet.querySelector('#finExpiryTitle')){closeSheet();screenEl.querySelector('[data-fin-expiry]')?.focus();return}if(historyStack.length)oldBack();else go('wallet',false)};
-      function resetFilters(){finType='all';finCurrentOnly=false;finOrderType='all';finQuery='';finDates={from:'',to:''};finOrderDates={from:'',to:''};finScroll.clear()}
+      function resetFilters(){finCustomerFilters=defaultCustomerFilters();finCustomerDraft=copyCustomerFilters(finCustomerFilters);finCustomerQuery='';finCustomerQuick='all';finFavoriteState.clear();finType='all';finCurrentOnly=false;finOrderType='all';finQuery='';finDates={from:'',to:''};finOrderDates={from:'',to:''};finScroll.clear()}
       function refresh(){if(finBusy)return;finBusy=true;const operation=++finOperation,origin=current,city=selectedCity;go(current,false);setTimeout(()=>{if(operation!==finOperation||city!==selectedCity){finBusy=false;return}finBusy=false;if(finMode==='refreshError')finRefreshNotice='刷新失败，以下为上次成功加载的内容。';else{finMode='normal';finRefreshNotice=''}if(current===origin){go(origin,false);showToast(finMode==='refreshError'?'查询失败，请重试':origin==='rechargeDetail'&&orderNow(orders.find(o=>o.id===finOrderId)||orders[1]).pending?'仍在确认中，请稍后刷新':'已刷新')}},550)}
       function showRecord(id){
         const r=allRecords().find(r=>r.id===id);if(!r){showToast('记录暂不可查看');return}
@@ -1029,6 +1074,24 @@
         if(target.hasAttribute('data-fin-view-lead')){const lead=leads[target.dataset.finViewLead];if(!lead){showToast('该线索暂不可查看');return}activeCustomer=lead.key;go(lead.route);return}
         if(target.hasAttribute('data-fin-purchase')){showToast('暂时无法打开充值服务，请稍后重试');return}
       },true);
+      window.addEventListener('click',e=>{
+        const choice=e.target.closest('[data-fin-customer-choice]'),apply=e.target.closest('[data-fin-customer-apply]'),reset=e.target.closest('[data-fin-customer-reset]'),clear=e.target.closest('[data-fin-customer-clear]'),quick=e.target.closest('[data-fin-customer-quick]'),favorite=current==='customers'?e.target.closest('[data-favorite]'):null;
+        if(!choice&&!apply&&!reset&&!clear&&!quick&&!favorite)return;
+        if(selectedCity!=='xian')return;e.preventDefault();e.stopImmediatePropagation();
+        if(choice){const key=choice.dataset.finCustomerChoice,value=choice.dataset.finCustomerValue;
+          if(key==='assigned'||key==='active')finCustomerDraft[key]=[value];
+          else if(value==='全部')finCustomerDraft[key]=[];
+          else finCustomerDraft[key]=finCustomerDraft[key].includes(value)?finCustomerDraft[key].filter(v=>v!==value):[...finCustomerDraft[key],value];
+          choice.closest('.filter-block').querySelectorAll('[data-fin-customer-choice]').forEach(button=>{const v=button.dataset.finCustomerValue,on=v==='全部'?!finCustomerDraft[key].length:finCustomerDraft[key].includes(v);button.classList.toggle('on',on);button.setAttribute('aria-pressed',String(on));});return;
+        }
+        if(reset){finCustomerDraft=defaultCustomerFilters();const position=screenEl.scrollTop;screenEl.innerHTML=pages.filter();screenEl.scrollTop=position;showToast('筛选条件已重置');return;}
+        if(apply){finCustomerFilters=copyCustomerFilters(finCustomerDraft);finResetPosition=true;if(historyStack.at(-1)==='customers')back();else go('customers');return;}
+        if(clear){finCustomerFilters=defaultCustomerFilters();finCustomerDraft=copyCustomerFilters(finCustomerFilters);finCustomerQuery='';finCustomerQuick='all';finResetPosition=true;go('customers',false);return;}
+        if(quick){finCustomerQuick=quick.dataset.finCustomerQuick;finResetPosition=true;go('customers',false);return;}
+        if(favorite){const id=favorite.closest('[data-fin-customer-lead]')?.dataset.finCustomerLead;if(!id)return;const on=!favorite.classList.contains('on');finFavoriteState.set(id,on);favorite.classList.toggle('on',on);favorite.setAttribute('aria-label',on?'取消收藏':'收藏客户');showToast(on?'已收藏客户':'已取消收藏');}
+      },true);
+      let customerSearchTimer;
+      window.addEventListener('input',e=>{if(!e.target.matches('[data-fin-customer-search]'))return;finCustomerQuery=e.target.value;const cursor=e.target.selectionStart;clearTimeout(customerSearchTimer);customerSearchTimer=setTimeout(()=>{if(current!=='customers')return;finResetPosition=true;go('customers',false);const input=screenEl.querySelector('[data-fin-customer-search]');input?.focus();input?.setSelectionRange(cursor,cursor)},180)},true);
       let searchTimer;
       window.addEventListener('input',e=>{if(!e.target.matches('[data-fin-search]'))return;finQuery=e.target.value;const cursor=e.target.selectionStart;clearTimeout(searchTimer);searchTimer=setTimeout(()=>{if(current!=='coinFlow')return;finResetPosition=true;go('coinFlow',false);const input=screenEl.querySelector('[data-fin-search]');input.focus();input.setSelectionRange(cursor,cursor)},180)},true);
       window.addEventListener('change',e=>{
