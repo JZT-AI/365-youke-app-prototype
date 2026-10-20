@@ -824,7 +824,7 @@
       const finLegacyPages={wallet:pages.wallet,coinFlow:pages.coinFlow,flowDetail:pages.flowDetail,waiverRecords:pages.waiverRecords};
       iconPaths.refresh='<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/>';
       iconPaths.moneybag='<path d="M8 3h8l-2 4h-4L8 3Z"/><path d="M9 7h6c1.2 2 5 4.2 5 8a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6c0-3.8 3.8-6 5-8Z"/><path d="m10 11 2 2 2-2m-2 2v5m-2-4h4m-4 2h4"/>';
-      const finTypes=[['all','全部'],['hold','已预扣'],['debit','已扣款'],['return','已返还'],['expire','到期失效'],['recharge','充值到账'],['gift','赠送到账']];
+      const finTypes=[['all','全部'],['hold','预扣'],['debit','实扣'],['return','返还'],['expire','过期'],['recharge','充值'],['gift','赠送']];
       const orders=[
         {id:'pending',number:'YK202610140002',time:'2026-10-14 10:10',paid:10000,gift:2000,cash:1000,channel:'获客宝小程序',giftEnd:'2027-04-14 23:59',pending:true,paymentKnown:false},
         {id:'order1',number:'YK202610130001',time:'2026-10-13 09:30',arrived:'2026-10-13 09:30',paid:20000,gift:4000,cash:2000,channel:'获客宝小程序',giftEnd:'2027-04-13 23:59'},
