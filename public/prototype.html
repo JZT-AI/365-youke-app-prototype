@@ -1009,7 +1009,7 @@
         const keys=['service','follow','favorite','assigned','active'];
         t.content.querySelectorAll('.filter-block').forEach((block,index)=>{const key=keys[index];block.querySelectorAll('.choice').forEach(button=>{button.dataset.finCustomerChoice=key;button.dataset.finCustomerValue=button.textContent.trim();button.classList.toggle('on',finCustomerDraft[key].includes(button.dataset.finCustomerValue));button.setAttribute('aria-pressed',String(button.classList.contains('on')));})});
         const section=document.createElement('div');section.className='filter-block';section.innerHTML=`<h4>结算状态 <small>可多选</small></h4><div class='filter-grid'>${['全部',...settlementOptions].map(label=>`<button class='choice ${label==='全部'?!finCustomerDraft.settlement.length?'on':'':finCustomerDraft.settlement.includes(label)?'on':''}' data-fin-customer-choice='settlement' data-fin-customer-value='${label}' aria-pressed='${label==='全部'?!finCustomerDraft.settlement.length:finCustomerDraft.settlement.includes(label)}'>${label}</button>`).join('')}</div>`;
-        const service=t.content.querySelector('.filter-block');service.after(section);
+        const lastFilter=t.content.querySelectorAll('.filter-block');lastFilter[lastFilter.length-1].after(section);
         const apply=t.content.querySelector('.filter-actions .primary');apply.removeAttribute('data-go');apply.setAttribute('data-fin-customer-apply','');
         const reset=t.content.querySelector('[data-reset-filter]');reset.removeAttribute('data-reset-filter');reset.setAttribute('data-fin-customer-reset','');
         return t.innerHTML;
