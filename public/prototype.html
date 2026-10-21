@@ -831,9 +831,9 @@
         {id:'order2',number:'YK202610100002',time:'2026-10-10 15:00',arrived:'2026-10-10 15:01',paid:10000,gift:2000,cash:1000,channel:'获客宝小程序',giftEnd:'2027-04-10 23:59'}
       ];
       const leads={
-        '149266':{name:'林小姐',route:'leadDetail',key:'lin',allocated:'2026-10-14 11:00',state:'生效中',settle:'已预扣',record:'hold1'},
-        '149405':{name:'周先生',route:'permanentDetail',key:'zhou',allocated:'2026-10-12 10:00',state:'生效中',settle:'已扣款',record:'debit1'},
-        '149423':{name:'王先生',route:'expiredDetail',key:'wang',allocated:'2026-10-12 13:00',state:'已失效',settle:'已返还',record:'return1'},
+        '149266':{name:'林小姐',route:'leadDetail',key:'lin',allocated:'2026-10-14 11:00',state:'生效中',settle:'预扣',record:'hold1'},
+        '149405':{name:'周先生',route:'permanentDetail',key:'zhou',allocated:'2026-10-12 10:00',state:'生效中',settle:'实扣',record:'debit1'},
+        '149423':{name:'王先生',route:'expiredDetail',key:'wang',allocated:'2026-10-12 13:00',state:'已失效',settle:'返还',record:'return1'},
         '149410':{name:'张女士',route:'platformFreeDetail',key:'platformFree',allocated:'2026-10-12 10:00',state:'已失效',settle:'免扣',record:'free2'},
         '149420':{name:'林小姐',route:'linOldDetail',key:'linOld',allocated:'2026-10-10 09:00',state:'已失效',settle:'免扣',record:'free1'}
       };
@@ -942,7 +942,7 @@
         const linked=leads[r.lead];
         const association=r.lead?`<section class='detail-section fin-card'><h4>关联线索</h4><button class='fin-associated-lead' data-fin-view-lead='${r.lead}'><span><b>${esc(nameOf(r))}</b><small>线索 ${r.lead} · 查看对应轮次</small></span>${icon('chevron',16)}</button>${linked?pair('分配时间',linked.allocated):''}${linked?pair('服务状态',linked.state):r.ended?pair('服务状态','服务已结束'):''}</section>`:'';
         const outcome=r.type==='hold'?pair('预扣状态',r.current?'当前预扣':`${r.outcome} · 已不占用`):'';
-        return finScreen(`<div class='content fin-page'><section class='state fin-detail-hero'><span class='fin-detail-mark ${toneOf(r)}'>${icon(kindIcon[r.type],25)}</span><h3>${esc(labelOf(r))}</h3><div class='fin-detail-number ${eventTone(r)}'>${signed(eventAmount(r))}</div></section><section class='detail-section fin-card'><h4>币种构成</h4><div class='${r.type==='debit'?'fin-debit-parts':''}'>${parts(r.paid,r.gift,eventSign(r))}</div>${r.type==='return'&&r.giftEnd?pair('赠送币到期时间',r.giftEnd):''}</section>${result}<section class='detail-section fin-card'><h4>记录信息</h4>${pair(r.type==='debit'?'实扣时间':r.type==='hold'?'预扣时间':'发生时间',r.time)}${r.type==='debit'?pair('结算状态','已扣款'):''}${pair('原因',reason)}${outcome}${r.holdTime&&r.type!=='hold'?pair('预扣时间',r.holdTime):''}${r.settlementGroup?pair('结算单号',r.settlementGroup,r.settlementGroup):''}${r.relatedHold?pair('关联预扣记录','LS-'+r.relatedHold):''}${r.relatedReturn?pair('关联返还记录','LS-'+r.relatedReturn):''}${r.relatedDebit?pair('关联实扣记录','LS-'+r.relatedDebit):''}${r.source?pair('来源',r.source):''}${r.end?pair('到期时间',r.end):''}${pair('记录编号','LS-'+r.id,'LS-'+r.id)}${r.batch?pair('赠送批次',r.batch):''}</section>${association}</div>`,'有客币详情',{detail:true});
+        return finScreen(`<div class='content fin-page'><section class='state fin-detail-hero'><span class='fin-detail-mark ${toneOf(r)}'>${icon(kindIcon[r.type],25)}</span><h3>${esc(labelOf(r))}</h3><div class='fin-detail-number ${eventTone(r)}'>${signed(eventAmount(r))}</div></section><section class='detail-section fin-card'><h4>币种构成</h4><div class='${r.type==='debit'?'fin-debit-parts':''}'>${parts(r.paid,r.gift,eventSign(r))}</div>${r.type==='return'&&r.giftEnd?pair('赠送币到期时间',r.giftEnd):''}</section>${result}<section class='detail-section fin-card'><h4>记录信息</h4>${pair(r.type==='debit'?'实扣时间':r.type==='hold'?'预扣时间':'发生时间',r.time)}${r.type==='debit'?pair('结算状态','实扣'):''}${pair('原因',reason)}${outcome}${r.holdTime&&r.type!=='hold'?pair('预扣时间',r.holdTime):''}${r.settlementGroup?pair('结算单号',r.settlementGroup,r.settlementGroup):''}${r.relatedHold?pair('关联预扣记录','LS-'+r.relatedHold):''}${r.relatedReturn?pair('关联返还记录','LS-'+r.relatedReturn):''}${r.relatedDebit?pair('关联实扣记录','LS-'+r.relatedDebit):''}${r.source?pair('来源',r.source):''}${r.end?pair('到期时间',r.end):''}${pair('记录编号','LS-'+r.id,'LS-'+r.id)}${r.batch?pair('赠送批次',r.batch):''}</section>${association}</div>`,'有客币详情',{detail:true});
       }
       function expiryBody(){
         const b=balances();const rows=b.gift?[{amount:400,end:'2026-10-31 23:59',source:'平台赠送'},{amount:400,end:'2026-11-30 23:59',source:'平台赠送'},{amount:2000,end:'2027-04-13 23:59',source:'套餐赠送'},...(finSettled?[{amount:2000,end:'2027-04-14 23:59',source:'套餐赠送'}]:[])]:[];
@@ -981,7 +981,7 @@
         .fin-waiver-row{align-items:center}.fin-waiver-row .waiver-copy{min-width:0}.fin-waiver-row .waiver-copy p{white-space:normal;line-height:1.6}.fin-waiver-row .fin-list-lead{font-size:10px;min-height:27px}.fin-waiver-time{flex-shrink:0;align-self:center;white-space:nowrap;color:var(--muted);font-size:10px;line-height:1.6}
       `;document.head.appendChild(style);
       pages.wallet=()=>selectedCity==='xian'?wallet():finLegacyPages.wallet();pages.coinFlow=()=>selectedCity==='xian'?recordList():finLegacyPages.coinFlow();pages.flowDetail=()=>selectedCity==='xian'?recordDetail():finLegacyPages.flowDetail();pages.waiverRecords=()=>selectedCity==='xian'?recordList():finLegacyPages.waiverRecords();pages.rechargeRecords=orderList;pages.rechargeDetail=orderDetail;
-      const settlementOptions=['已预扣','已扣款','已返还','免扣'];
+      const settlementOptions=['预扣','实扣','返还','免扣'];
       const defaultCustomerFilters=()=>({service:[],follow:[],favorite:[],assigned:['全部'],active:['全部'],settlement:[]});
       const copyCustomerFilters=f=>Object.fromEntries(Object.entries(f).map(([k,v])=>[k,[...v]]));
       let finCustomerFilters=defaultCustomerFilters(),finCustomerDraft=copyCustomerFilters(finCustomerFilters),finCustomerQuery='',finCustomerQuick='all';
@@ -1023,7 +1023,7 @@
           const leadId=idByRoute[card.dataset.go],l=leads[leadId];if(!l)return;card.dataset.finCustomerLead=leadId;const activeMatch=card.querySelector('.customer-head .sub')?.textContent.match(/\d{2}-\d{2} \d{2}:\d{2}/);const activeTime=activeMatch?'2026-'+activeMatch[0]:'';const favorite=card.querySelector('[data-favorite]');if(favorite&&finFavoriteState.has(leadId))favorite.classList.toggle('on',finFavoriteState.get(leadId));
           const row=card.querySelector('.validity-row,.status-line');if(!row)return;
           const label=l.settle;
-          const tag=document.createElement('button');tag.type='button';tag.className='validity-chip fin-customer-tag '+(label.includes('免扣')?'free':label==='已返还'?'return':'');if(label==='免扣'){tag.dataset.finWaiverLead=leadId;tag.setAttribute('aria-label',`查看${l.name}线索${leadId}的免扣记录`)}else{tag.dataset.finRecord=l.record;tag.setAttribute('aria-label',`查看${l.name}${label}的有客币详情`)}tag.innerHTML=esc(label)+icon('chevron',9);
+          const tag=document.createElement('button');tag.type='button';tag.className='validity-chip fin-customer-tag '+(label.includes('免扣')?'free':label==='返还'?'return':'');if(label==='免扣'){tag.dataset.finWaiverLead=leadId;tag.setAttribute('aria-label',`查看${l.name}线索${leadId}的免扣记录`)}else{tag.dataset.finRecord=l.record;tag.setAttribute('aria-label',`查看${l.name}${label}的有客币详情`)}tag.innerHTML=esc(label)+icon('chevron',9);
           row.insertBefore(tag,row.children[1]||null);
           const sub=card.querySelector('.customer-head .sub');if(sub)sub.textContent=`线索 ${leadId} · ${l.allocated.slice(5)}`;
           if(!customerMatches(card,l,label,activeTime))card.remove();
