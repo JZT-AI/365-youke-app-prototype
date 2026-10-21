@@ -824,7 +824,7 @@
       const finLegacyPages={wallet:pages.wallet,coinFlow:pages.coinFlow,flowDetail:pages.flowDetail,waiverRecords:pages.waiverRecords};
       iconPaths.refresh='<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/>';
       iconPaths.moneybag='<path d="M8 3h8l-2 4h-4L8 3Z"/><path d="M9 7h6c1.2 2 5 4.2 5 8a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6c0-3.8 3.8-6 5-8Z"/><path d="m10 11 2 2 2-2m-2 2v5m-2-4h4m-4 2h4"/>';
-      const finTypes=[['all','全部'],['hold','预扣'],['debit','实扣'],['return','返还'],['expire','过期'],['recharge','充值'],['gift','赠送']];
+      const finTypes=[['all','全部'],['hold','预扣'],['debit','实扣'],['return','返还'],['expire','过期'],['recharge','充值'],['onboarding','入驻赠送'],['operations','运营补币']];
       const orders=[
         {id:'pending',number:'YK202610140002',time:'2026-10-14 10:10',paid:10000,gift:2000,cash:1000,channel:'获客宝小程序',giftEnd:'2027-04-14 23:59',pending:true,paymentKnown:false},
         {id:'order1',number:'YK202610130001',time:'2026-10-13 09:30',arrived:'2026-10-13 09:30',paid:20000,gift:4000,cash:2000,channel:'获客宝小程序',giftEnd:'2027-04-13 23:59'},
@@ -845,15 +845,15 @@
         {id:'debitHold1',type:'hold',title:'线索预扣',time:'2026-10-12 10:00',lead:'149405',paid:1000,gift:200,available:-1200,reason:'本轮线索分配预扣',current:false,outcome:'已返还后实扣',settlementGroup:'JS-149405',relatedReturn:'debitReturn1'},
         {id:'debitReturn1',type:'return',title:'预扣返还',time:'2026-10-13 10:19',lead:'149405',paid:1000,gift:200,available:1200,giftEnd:'2027-04-12 23:59',reason:'预扣转实扣，先返还原预扣',holdTime:'2026-10-12 10:00',settlementGroup:'JS-149405',relatedHold:'debitHold1',relatedDebit:'debit1'},
         {id:'debit1',type:'debit',title:'线索扣款',time:'2026-10-13 10:20',lead:'149405',paid:1000,gift:200,available:-1200,reason:'客户有效开口，预扣返还后实扣',holdTime:'2026-10-12 10:00',settlementGroup:'JS-149405',relatedHold:'debitHold1',relatedReturn:'debitReturn1'},
-        {id:'expire1',type:'expire',title:'赠送币到期',time:'2026-10-13 00:00',paid:0,gift:200,available:-200,reason:'该笔赠送有客币已到期',source:'平台赠送',batch:'G001',end:'2026-10-13 00:00'},
-        {id:'gift1',type:'gift',title:'平台赠送',time:'2026-10-12 15:30',paid:0,gift:400,available:400,reason:'平台运营赠送',source:'平台赠送',end:'2026-10-31 23:59'},
+        {id:'expire1',type:'expire',title:'赠送币到期',time:'2026-10-13 00:00',paid:0,gift:200,available:-200,reason:'该笔赠送有客币已到期',source:'运营补币',batch:'G001',end:'2026-10-13 00:00'},
+        {id:'gift1',type:'gift',giftKind:'operations',title:'运营补币',time:'2026-10-12 15:30',paid:0,gift:400,available:400,reason:'运营补币',source:'运营补币',end:'2026-10-31 23:59'},
         {id:'fullReturn',type:'return',title:'线索返还',time:'2026-10-11 10:00',paid:600,gift:0,available:600,reason:'未开口转派，原预扣已释放',lead:'149390',name:'赵先生',holdTime:'2026-10-10 10:00'},
         {id:'allExpired',type:'return',title:'线索返还',time:'2026-10-11 09:00',paid:0,gift:300,available:300,giftEnd:'2026-10-10 23:59',reason:'未开口，服务结束',lead:'149388',name:'陈女士',holdTime:'2026-10-10 09:00'},
         {id:'endedDebitHold',type:'hold',title:'线索预扣',time:'2026-10-09 11:00',paid:1500,gift:300,available:-1800,reason:'本轮线索分配预扣',lead:'149380',name:'李先生',current:false,outcome:'已返还后实扣',settlementGroup:'JS-149380',relatedReturn:'endedDebitReturn'},
         {id:'endedDebitReturn',type:'return',title:'预扣返还',time:'2026-10-10 10:59',paid:1500,gift:300,available:1800,giftEnd:'2027-04-09 23:59',reason:'预扣转实扣，先返还原预扣',lead:'149380',name:'李先生',holdTime:'2026-10-09 11:00',settlementGroup:'JS-149380',relatedHold:'endedDebitHold',relatedDebit:'endedDebit'},
         {id:'endedDebit',type:'debit',title:'线索扣款',time:'2026-10-10 11:00',paid:1500,gift:300,available:-1800,reason:'客户有效开口，预扣返还后实扣',lead:'149380',name:'李先生',ended:true,holdTime:'2026-10-09 11:00',settlementGroup:'JS-149380',relatedHold:'endedDebitHold',relatedReturn:'endedDebitReturn'},
-        {id:'gift2',type:'gift',title:'入驻赠送',time:'2026-10-09 09:00',paid:0,gift:600,available:600,reason:'经纪人入驻赠送',source:'入驻赠送',end:'2026-11-30 23:59'},
-        {id:'platformGift2',type:'gift',title:'平台赠送',time:'2026-10-08 09:00',paid:0,gift:800,available:800,reason:'平台赠送（示例）',source:'平台赠送',end:'2026-11-30 23:59'}
+        {id:'gift2',type:'gift',giftKind:'onboarding',title:'入驻赠送',time:'2026-10-09 09:00',paid:0,gift:600,available:600,reason:'经纪人入驻赠送',source:'入驻赠送',end:'2026-11-30 23:59'},
+        {id:'platformGift2',type:'gift',giftKind:'operations',title:'运营补币',time:'2026-10-08 09:00',paid:0,gift:800,available:800,reason:'运营补币（示例）',source:'运营补币',end:'2026-11-30 23:59'}
       ];
       const waiverEvents=[
         {id:'free1',title:'线索激活免扣',reason:'历史绑定关系激活',mark:'check',time:'2026-10-13 09:00',lead:'149420'},
@@ -921,7 +921,7 @@
       function recordList(){
         const isFree=finLedgerTab==='free',query=finQuery.trim().toLowerCase();
         let rows=isFree?waivers():allRecords();
-        rows=rows.filter(r=>(isFree||finType==='all'||r.type===finType)&&(!(finType==='hold'&&finCurrentOnly)||r.current)&&inDate(r.time,finDates)&&(!query||`${nameOf(r)} ${r.lead||''}`.toLowerCase().includes(query)));
+        rows=rows.filter(r=>(isFree||finType==='all'||(['onboarding','operations'].includes(finType)?r.type==='gift'&&r.giftKind===finType:r.type===finType))&&(!(finType==='hold'&&finCurrentOnly)||r.current)&&inDate(r.time,finDates)&&(!query||`${nameOf(r)} ${r.lead||''}`.toLowerCase().includes(query)));
         const empty=finMode==='empty'?`<div class='fin-empty'><span>${icon('file',32)}</span><h4>${isFree?'暂无免扣记录':'暂无有客币明细'}</h4><p>${isFree?'发生免扣后，记录将在这里展示。':'账户发生变动后，记录将在这里展示。'}</p></div>`:stateBlock('empty');
         return finScreen(`<div class='content fin-page'><section id='finLedgerPanel'>${isFree?'':`<div class='fin-type-grid' role='group' aria-label='明细类型'>${finTypes.map(([key,label])=>`<button data-fin-type='${key}' class='chip ${finType===key?'on':''}' aria-pressed='${finType===key}'>${label}</button>`).join('')}</div>`}<div class='fin-list-tools'><button class='fin-date-trigger' data-fin-date='records'>${icon('filter',15)}${esc(dateText(finDates))}</button><span>${rows.length} 条</span></div>${!isFree&&finType==='hold'?`<label class='fin-current-only'><input type='checkbox' data-fin-current-only ${finCurrentOnly?'checked':''}>仅看当前预扣</label>`:''}<div class='search fin-search'>${icon('search',17)}<input data-fin-search value='${esc(finQuery)}' placeholder='搜索客户或线索编号' aria-label='搜索客户或线索编号'>${finQuery?`<button data-fin-search-clear aria-label='清空搜索'>${icon('close',16)}</button>`:''}</div><div class='${isFree?'waiver-list':'ledger-list'}' id='finRecordList'>${rows.length?rows.map(r=>isFree?waiverRow(r):recordRow(r)).join(''):empty}</div>${rows.length?`<p class='fin-list-end'>已展示当前条件下的全部记录</p>`:''}</section></div>`,isFree?'免扣记录':'有客币明细');
       }
@@ -945,7 +945,7 @@
         return finScreen(`<div class='content fin-page'><section class='state fin-detail-hero'><span class='fin-detail-mark ${toneOf(r)}'>${icon(kindIcon[r.type],25)}</span><h3>${esc(labelOf(r))}</h3><div class='fin-detail-number ${eventTone(r)}'>${signed(eventAmount(r))}</div></section><section class='detail-section fin-card'><h4>币种构成</h4><div class='${r.type==='debit'?'fin-debit-parts':''}'>${parts(r.paid,r.gift,eventSign(r))}</div>${r.type==='return'&&r.giftEnd?pair('赠送币到期时间',r.giftEnd):''}</section>${result}<section class='detail-section fin-card'><h4>记录信息</h4>${pair(r.type==='debit'?'实扣时间':r.type==='hold'?'预扣时间':'发生时间',r.time)}${r.type==='debit'?pair('结算状态','实扣'):''}${pair('原因',reason)}${outcome}${r.holdTime&&r.type!=='hold'?pair('预扣时间',r.holdTime):''}${r.settlementGroup?pair('结算单号',r.settlementGroup,r.settlementGroup):''}${r.relatedHold?pair('关联预扣记录','LS-'+r.relatedHold):''}${r.relatedReturn?pair('关联返还记录','LS-'+r.relatedReturn):''}${r.relatedDebit?pair('关联实扣记录','LS-'+r.relatedDebit):''}${r.source?pair('来源',r.source):''}${r.end?pair('到期时间',r.end):''}${pair('记录编号','LS-'+r.id,'LS-'+r.id)}${r.batch?pair('赠送批次',r.batch):''}</section>${association}</div>`,'有客币详情',{detail:true});
       }
       function expiryBody(){
-        const b=balances();const rows=b.gift?[{amount:400,end:'2026-10-31 23:59',source:'平台赠送'},{amount:400,end:'2026-11-30 23:59',source:'平台赠送'},{amount:2000,end:'2027-04-13 23:59',source:'套餐赠送'},...(finSettled?[{amount:2000,end:'2027-04-14 23:59',source:'套餐赠送'}]:[])]:[];
+        const b=balances();const rows=b.gift?[{amount:400,end:'2026-10-31 23:59',source:'运营补币'},{amount:400,end:'2026-11-30 23:59',source:'运营补币'},{amount:2000,end:'2027-04-13 23:59',source:'套餐赠送'},...(finSettled?[{amount:2000,end:'2027-04-14 23:59',source:'套餐赠送'}]:[])]:[];
         return `<div class='fin-expiry-summary'><span>可用赠送有客币</span><strong>${num(b.gift)}<small> 币</small></strong></div><h5 class='fin-subhead'>按到期时间排序</h5>${rows.map(r=>`<div class='fin-expiry-row'><div><b>${num(r.amount)}<small> 币</small></b><span>${r.source}</span></div><div><b>${r.end}</b><span>到期</span></div></div>`).join('')||`<p class='fin-small-empty'>暂无可用赠送币</p>`}<p class='fin-footer-note'>付费有客币无有效期。</p>`;
       }
       function openExpiry(){
