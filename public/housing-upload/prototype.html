@@ -1292,6 +1292,7 @@ window.originalTaofangHouseCard=houseCard;
   const recordResult=t=>{const c=uploadCounts(t);return c.u.status==='cancelled'?'已取消':c.pending?'上传中':c.failed?c.done?'部分完成':'上传失败':'已完成'};
   function renderUploadRecords(s){
     const tasks=s.tasks.filter(t=>!t.fromSelection&&(t.owner===H.owner||t.recordViewer===H.owner)&&t.items.length>0&&(!recordsScope||t.entry==='app'&&!!t.target&&t.session===recordsScope.session)&&(!recordsOnlyActive||t.status!=='cancelled'&&uploadCounts(t,s).pending>0)).reverse();
+    tasks.forEach(t=>markFailureViewed(t,s));
     return returnListHead('上传任务','records')+'<div class="h-body"><div class="h-record-filters"><button data-h-record-filter="all" class="'+(!recordsOnlyActive?'on':'')+'">全部</button><button data-h-record-filter="active" class="'+(recordsOnlyActive?'on':'')+'">进行中</button></div><div class="h-muted">'+(recordsScope?'当前会话 · ':'')+(recordsOnlyActive?'进行中':'全部上传场景')+' · '+tasks.length+'条记录</div>'+(['homePicker','housingAll'].includes(recordsContext.screen)?'<div class="h-note">上传不会自动发给客户。<button class="h-link" data-h-return-list="records">返回选房</button></div>':'')+tasks.map(t=>{const done=uploadCounts(t,s).done;return '<button class="h-card h-record-list-row" data-h-record-detail="'+t.id+'"><div class="h-row"><b>'+taskScene(t)+'</b><span class="h-tag '+(t.status==='partial'?'red':t.status==='processing'||t.status==='sending'?'orange':'green')+'">'+recordResult(t)+'</span></div><p class="h-muted">'+escape(t.time)+'</p><div class="h-row"><span class="h-muted">共'+t.items.length+'套 · '+'上传成功'+done+'套</span><span class="h-record-detail-link">查看详情 ›</span></div></button>'}).join('')+(!tasks.length?'<div class="h-empty"><h4>暂无上传记录</h4><p>各场景中属于本人的记录会在这里汇总。</p></div>':'')+'</div>';
   }
   function uploadOutcomeSummary(t){const c=uploadCounts(t);return '共'+c.total+'套 · 上传成功'+c.done+'套'+(c.failed?' · 失败'+c.failed+'套':'')}
@@ -1320,7 +1321,7 @@ window.originalTaofangHouseCard=houseCard;
     if(!t){uploadFloating.hidden=true;return;}
     const c=uploadCounts(t,s),multiple=attention.length>1,remaining=pending.reduce((n,t)=>n+uploadCounts(t,s).pending,0),progress=pending.length?pending.reduce((n,t)=>n+uploadProgress(t,s),0)/pending.length:100;
     const title=pending.length?(pending.length>1?pending.length+'个任务上传中':'上传中'):failed.length>1?failed.length+'个任务未完成':failed.length?'有未完成房源':'已完成';
-    const summary=pending.length?(pending.length>1?'剩余'+remaining+'套':c.done+'/'+c.total):'查看详情';
+    const summary=pending.length?(pending.length>1?'剩余'+remaining+'套':c.done+'/'+c.total):multiple?'查看任务':'查看详情';
     uploadFloating.hidden=false;uploadFloating.dataset.taskId=t.id;uploadFloating.dataset.multiple=String(multiple);uploadFloating.dataset.hasFailures=String(!!failed.length);uploadFloating.setAttribute('aria-label',multiple?'查看当前会话的'+attention.length+'个上传任务':'查看上传任务详情');
     uploadFloating.innerHTML='<span class="h-upload-float-row"><b>'+title+'</b><small>'+summary+'</small><span>›</span></span>'+(pending.length&&failed.length?'<small class="h-upload-float-summary">'+failed.length+'个任务有未完成房源，待查看</small>':'')+(pending.length||!failed.length?'<span class="h-upload-float-track"><i data-h-upload-bar="'+escape(t.id)+'" style="width:'+progress+'%"></i></span>':'');
   }
