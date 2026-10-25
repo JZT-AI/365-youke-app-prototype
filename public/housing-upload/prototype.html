@@ -1277,20 +1277,20 @@ window.originalTaofangHouseCard=houseCard;
 
   }
   function uploadView(t,s=H.get()){return H.platformState({...s,tasks:[t]}).tasks[0]||{...t,items:[]};}
-  function uploadCounts(t,s=H.get()){const u=uploadView(t,s),done=u.items.filter(i=>i.status==='ready').length,failed=u.items.filter(i=>i.status==='failed').length;return {u,total:u.items.length,done,failed,pending:u.status==='cancelled'?0:u.items.length-done-failed};}
+  function uploadCounts(t,s=H.get()){const u=uploadView(t,s),done=u.items.filter(i=>i.status==='ready').length,failed=u.items.filter(i=>i.status==='failed').length;return {u,total:u.items.length,done,failed,pending:u.items.length-done-failed};}
   function uploadProgress(t,s=H.get()){const c=uploadCounts(t,s);return c.pending?Math.min(85,Math.max(0,(Date.now()-t.created)/8000*85)):c.failed?0:100;}
   function stageItem(t,i){return '<section class="h-upload-item"><b>'+escape(i.sourceId?'第三方房源 '+i.sourceId:'房源链接')+'</b><span class="h-tag orange">上传中</span></section>';}
   const uploadCompleteSeen=new Map(H.get().tasks.filter(t=>!uploadTaskPending(t)).map(t=>[t.id,0]));
   let viewedUploadFailures={};try{viewedUploadFailures=JSON.parse(localStorage.getItem('housing-upload-viewed-failures')||'{}')}catch{}
   const failureResultKey=t=>JSON.stringify(t.items.filter(i=>i.status==='failed').map(i=>[i.key,i.error,i.startedAt,i.events?.length]));
-  function needsFailureReview(t,s=H.get()){const c=uploadCounts(t,s);return t.status!=='cancelled'&&!c.pending&&c.failed>0&&viewedUploadFailures[t.id]!==failureResultKey(t);}
+  function needsFailureReview(t,s=H.get()){const c=uploadCounts(t,s);return !c.pending&&c.failed>0&&viewedUploadFailures[t.id]!==failureResultKey(t);}
   function markFailureViewed(t,s){if(!needsFailureReview(t,s))return;viewedUploadFailures[t.id]=failureResultKey(t);localStorage.setItem('housing-upload-viewed-failures',JSON.stringify(viewedUploadFailures));}
   const recordTabs=()=>'<div class="h-segment"><button data-h-record-view="houses" class="'+(!recordView?'on':'')+'">房源列表</button><button data-h-record-view="records" class="'+(recordView?'on':'')+'">上传记录</button></div>';
 
   const taskScene=t=>t.entry==='private'?'企微客服上传':t.target?'客户会话发房':'APP上传房源';
-  const recordResult=t=>{const c=uploadCounts(t);return c.u.status==='cancelled'?'已取消':c.pending?'上传中':c.failed?c.done?'部分完成':'上传失败':'已完成'};
+  const recordResult=t=>{const c=uploadCounts(t);return c.pending?'上传中':c.failed?c.done?'部分完成':'上传失败':'已完成'};
   function renderUploadRecords(s){
-    const tasks=s.tasks.filter(t=>!t.fromSelection&&(t.owner===H.owner||t.recordViewer===H.owner)&&t.items.length>0&&(!recordsScope||t.entry==='app'&&!!t.target&&t.session===recordsScope.session)&&(!recordsOnlyActive||t.status!=='cancelled'&&uploadTaskPending(t,s))).reverse();
+    const tasks=s.tasks.filter(t=>!t.fromSelection&&(t.owner===H.owner||t.recordViewer===H.owner)&&t.items.length>0&&(!recordsScope||t.entry==='app'&&!!t.target&&t.session===recordsScope.session)&&(!recordsOnlyActive||uploadTaskPending(t,s))).reverse();
     tasks.forEach(t=>markFailureViewed(t,s));
     return returnListHead('上传任务','records')+'<div class="h-body"><div class="h-record-filters"><button data-h-record-filter="all" class="'+(!recordsOnlyActive?'on':'')+'">全部</button><button data-h-record-filter="active" class="'+(recordsOnlyActive?'on':'')+'">进行中</button></div><div class="h-muted">'+(recordsScope?'当前会话 · ':'')+(recordsOnlyActive?'进行中':'全部上传场景')+' · '+tasks.length+'条记录</div>'+(['homePicker','housingAll'].includes(recordsContext.screen)?'<div class="h-note">上传不会自动发给客户。<button class="h-link" data-h-return-list="records">返回选房</button></div>':'')+tasks.map(t=>{const done=uploadCounts(t,s).done;return '<button class="h-card h-record-list-row" data-h-record-detail="'+t.id+'"><div class="h-row"><b>'+taskScene(t)+(t.target?' · '+escape(t.target):'')+'</b><span class="h-tag '+(t.status==='partial'?'red':t.status==='processing'||t.status==='sending'?'orange':'green')+'">'+recordResult(t)+'</span></div><p class="h-muted">'+escape(t.time)+'</p><div class="h-row"><span class="h-muted">共'+t.items.length+'套 · '+'上传成功'+done+'套</span><span class="h-record-detail-link">查看详情 ›</span></div></button>'}).join('')+(!tasks.length?'<div class="h-empty"><h4>暂无上传记录</h4><p>各场景中属于本人的记录会在这里汇总。</p></div>':'')+'</div>';
   }
@@ -1306,18 +1306,18 @@ window.originalTaofangHouseCard=houseCard;
     if(!t||t.fromSelection)return head('上传任务详情',recordDetailOrigin)+'<div class="h-empty">未找到这条上传记录</div>';
     const c=uploadCounts(t,s),processing=c.pending>0;
     markFailureViewed(t,s);
-    return head('上传任务详情',recordDetailOrigin)+'<div class="h-body" data-h-record-detail-view="'+t.id+'"><div class="h-record-summary"><h3>'+recordResult(t)+'</h3><p class="h-muted">'+taskScene(t)+(t.target?' · '+escape(t.target):'')+' · '+escape(t.time)+'</p><p class="h-muted">'+uploadOutcomeSummary(t)+'</p>'+ (processing?'<div class="h-track" role="status" aria-label="上传等待状态"><span data-h-upload-bar="'+escape(t.id)+'" style="width:'+uploadProgress(t,s)+'%"></span></div>':'')+'</div>'+t.items.map(i=>{const h=s.houses.find(h=>h.key===i.key),ui=c.u.items.find(x=>x.key===i.key),success=ui?.status==='ready';if(ui?.status==='failed')return failureMarkup(t,i,s);if(success&&h&&H.allowed(s,h))return '<section class="h-record-success" data-h-record-success><div class="h-muted">'+'上传成功'+'</div>'+uploadedHouseCard(h)+'</section>';if(success)return '<section class="h-record-success" data-h-record-success><b>'+escape(i.sourceId||'房源')+'</b><p class="h-muted">本次处理已完成，房源展示按当前权限</p></section>';if(processing)return '<article class="h-card h-progress">'+stageItem(t,i)+'</article>';return '<article class="h-card h-record-failure"><b>'+escape(h?.community||i.sourceId||'房源')+'</b><p>未完成：'+(t.status==='cancelled'?'已取消':'请稍后查看结果')+'</p></article>'}).join('')+'</div>';
+    return head('上传任务详情',recordDetailOrigin)+'<div class="h-body" data-h-record-detail-view="'+t.id+'"><div class="h-record-summary"><h3>'+recordResult(t)+'</h3><p class="h-muted">'+taskScene(t)+(t.target?' · '+escape(t.target):'')+' · '+escape(t.time)+'</p><p class="h-muted">'+uploadOutcomeSummary(t)+'</p>'+ (processing?'<div class="h-track" role="status" aria-label="上传等待状态"><span data-h-upload-bar="'+escape(t.id)+'" style="width:'+uploadProgress(t,s)+'%"></span></div>':'')+'</div>'+t.items.map(i=>{const h=s.houses.find(h=>h.key===i.key),ui=c.u.items.find(x=>x.key===i.key),success=ui?.status==='ready';if(ui?.status==='failed')return failureMarkup(t,i,s);if(success&&h&&H.allowed(s,h))return '<section class="h-record-success" data-h-record-success><div class="h-muted">'+'上传成功'+'</div>'+uploadedHouseCard(h)+'</section>';if(success)return '<section class="h-record-success" data-h-record-success><b>'+escape(i.sourceId||'房源')+'</b><p class="h-muted">本次处理已完成，房源展示按当前权限</p></section>';if(processing)return '<article class="h-card h-progress">'+stageItem(t,i)+'</article>';return '<article class="h-card h-record-failure"><b>'+escape(h?.community||i.sourceId||'房源')+'</b><p>未完成：'+'请稍后查看结果'+'</p></article>'}).join('')+'</div>';
   };
 
 
   // This floating hint reads upload results only; ordinary chat cards own delivery state.
-  function uploadTaskPending(t,s=H.get()){return t.status!=='cancelled'&&uploadCounts(t,s).pending>0;}
+  function uploadTaskPending(t,s=H.get()){return uploadCounts(t,s).pending>0;}
   const uploadFloating=document.createElement('button');uploadFloating.type='button';uploadFloating.className='h-upload-floating';uploadFloating.hidden=true;screenEl.parentElement.appendChild(uploadFloating);
   function paintUploadFloating(s=H.get()){
     const tasks=s.tasks.filter(t=>!t.fromSelection&&t.entry==='app'&&t.session===activeCustomer&&t.target&&t.owner===H.owner);
     if(!isNativeChat()||!tasks.length){uploadFloating.hidden=true;return;}
     const working=tasks.filter(t=>uploadTaskPending(t,s)),uploading=working,failed=tasks.filter(t=>needsFailureReview(t,s));
-    tasks.forEach(t=>{if(uploadTaskPending(t,s)){uploadCompleteSeen.delete(t.id);return;}const c=uploadCounts(t,s);if(t.status!=='cancelled'&&!c.pending&&!c.failed&&!uploadCompleteSeen.has(t.id))uploadCompleteSeen.set(t.id,Date.now());});
+    tasks.forEach(t=>{if(uploadTaskPending(t,s)){uploadCompleteSeen.delete(t.id);return;}const c=uploadCounts(t,s);if(!c.pending&&!c.failed&&!uploadCompleteSeen.has(t.id))uploadCompleteSeen.set(t.id,Date.now());});
     const attention=[...new Map([...working,...failed].map(t=>[t.id,t])).values()],completed=tasks.filter(t=>Date.now()-(uploadCompleteSeen.get(t.id)||0)<1500),t=attention[0]||completed.at(-1);
     if(!t){uploadFloating.hidden=true;return;}
     const c=uploadCounts(t,s),multiple=attention.length>1,remaining=uploading.reduce((n,t)=>n+uploadCounts(t,s).pending,0),failureCount=failed.reduce((n,t)=>n+uploadCounts(t,s).failed,0);
@@ -1332,7 +1332,7 @@ window.originalTaofangHouseCard=houseCard;
   // Completion entries reuse the original system-notification list, keyed by upload request.
   let readUploadNotices=new Set();try{readUploadNotices=new Set(JSON.parse(localStorage.getItem('housing-upload-read-notices')||'[]'))}catch{}
   function uploadNotices(s=H.get()){
-    return s.tasks.filter(t=>!t.fromSelection&&!t.admissionError&&t.owner===H.owner&&t.status!=='cancelled'&&t.items.some(i=>i.startedAt||i.readyAt)).map(t=>({t,c:uploadCounts(t,s)})).filter(n=>!n.c.pending).sort((a,b)=>b.t.created-a.t.created);
+    return s.tasks.filter(t=>!t.fromSelection&&!t.admissionError&&t.owner===H.owner&&t.items.some(i=>i.startedAt||i.readyAt)).map(t=>({t,c:uploadCounts(t,s)})).filter(n=>!n.c.pending).sort((a,b)=>b.t.created-a.t.created);
   }
   const noticeTitle=n=>n.c.failed?(n.c.done?'房源上传部分完成':'房源上传未完成'):'房源上传完成';
   const originalSystemMessages=pages.systemMessages;pages.systemMessages=()=>{const template=document.createElement('template');template.innerHTML=originalSystemMessages();const notices=uploadNotices();if(notices.length)template.content.querySelector('.content').insertAdjacentHTML('afterbegin','<div class="notice-group-title">房源上传</div><div class="message-list">'+notices.map(n=>'<button class="message-list-row h-upload-notice" data-h-upload-notice="'+escape(n.t.id)+'"><span class="service-mark">'+icon('home',22)+'</span><span class="message-copy"><b>'+noticeTitle(n)+'</b><p>'+escape(taskScene(n.t))+' · 成功'+n.c.done+'套'+(n.c.failed?'，未完成'+n.c.failed+'套':'')+'</p><small class="h-upload-notice-id">任务编号：'+escape(n.t.id)+'</small></span><time>'+escape((n.t.finishedAt||n.t.items.map(i=>i.readyAt||'').sort().at(-1)||n.t.time).slice(5,16))+'</time>'+(!readUploadNotices.has(n.t.id)?'<span class="unread-dot"></span>':'')+'</button>').join('')+'</div>');return template.innerHTML;};
@@ -1397,7 +1397,7 @@ window.originalTaofangHouseCard=houseCard;
     if('hClear'in d){query='';searchDraft=null;selectedCommunity=null;suggestionsOpen=false;Object.keys(filters).forEach(k=>filters[k]=k==='sort'?'default':'');selected.clear();startHousingQuery();return}
     if('hSendSelected'in d){sendExistingHouses([...selected]);return}
     if('hUpload'in d){uploadDraft=document.getElementById('h-upload-text').value;const id=H.create(uploadDraft,'app','');if(!id){document.getElementById('h-upload-error').innerHTML=uploadFeedback='未识别到支持的房源链接，请检查后重试<button class="h-outline h-consult" data-h-consult="">咨询客服</button>';return}uploadDraft='';uploadFeedback='';go('housingResults');return}
-    if(d.hCancel){H.cancel(d.hCancel);return}
+    
     if(d.hRefresh){if(!H.owns(H.get(),d.hRefresh)){showToast('此房源不在我的房源中');return}setOpenHouseSwipe();closeSheet();const id=H.refresh(d.hRefresh);showToast(id?'正在更新房源':'暂无法更新，请重试');return}if(d.hDelete){if(!H.owns(H.get(),d.hDelete)){showToast('此房源不在我的房源中');return}setOpenHouseSwipe();dialog('<h4>从我的房源删除？</h4><p>删除后将从我的房源移除，不影响其他人的房源。</p><div class="h-actions"><button class="h-outline" data-h-close>取消</button><button class="h-danger" data-h-confirm-delete="'+escape(d.hDelete)+'">确认删除</button></div>');return}if(d.hConfirmDelete){selected.delete(d.hConfirmDelete);setOpenHouseSwipe();closeSheet();H.unlink(d.hConfirmDelete);showToast('已从我的房源删除');return}
     if(d.hSample){const text=d.hSample==='multi'?'这两套您看看：\n'+H.sample.bk+'\n'+H.sample.ajk:d.hSample==='collection-failure'?'这两套您看看：\n'+H.sample.bk+'\n'+H.sample.collectionFailure:'同一房源重复链接，并附普通链接：\n'+H.sample.bk+'\n'+H.sample.bk+'\n'+H.sample.invalid;if(current==='housingUpload'){uploadDraft=text;uploadFeedback='';rerender(false);document.getElementById('h-upload-text')?.focus()}else{draft=text;go('housingChat');document.getElementById('msgInput')?.focus()}return}if('hReset'in d){H.reset();draft='';uploadDraft='';query='';searchDraft=null;selectedCommunity=null;suggestionsOpen=false;selected.clear();go('housingMe',false);return}
   });
