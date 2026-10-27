@@ -1152,13 +1152,29 @@ window.originalTaofangHouseCard=houseCard;
   let range='mine',query='',filterDraft=null,filters={min:'',max:'',room:'',areaMin:'',areaMax:'',bath:'',channel:'',sort:'default'},selected=new Set(),draft='',uploadDraft='',uploadFeedback='',activeTarget='林女士',resultId='',recordDetailId='',recordDetailOrigin='housingRecords',recordsOnlyActive=false,recordsScope=null,openScopedRecords=false,filterOpen=false,recordView=false,swipeOpenKey='',swipeGesture=null,pendingCardRender=false,uploadContext={screen:'housingMine',range:'mine'},recordsContext={screen:'housingMine',range:'mine'},supportReturn=null,supportContact=null,supportFailNext=false;
   const queryPages=new Set(['housingMine','housingAll','homePicker']);
   let queryPending=false,queryError=false,queryToken=0,queryTimer=null,queryFailNext=false,queryStarts=0;
-  function cancelHousingQuery(){clearTimeout(queryTimer);queryToken++;queryPending=false;queryError=false;}
-  function startHousingQuery(){
-    if(!queryPages.has(current)||queryPending)return;
+  let mineSearchTimer=null,mineSearchComposing=false;
+  const usesMineLiveSearch=()=>queryPages.has(current)&&current!=='homePicker'&&range==='mine';
+  function cancelHousingQuery(){clearTimeout(queryTimer);clearTimeout(mineSearchTimer);mineSearchComposing=false;queryToken++;queryPending=false;queryError=false;}
+  function startHousingQuery({keepInput=false,replacePending=false}={}){
+    if(!queryPages.has(current)||queryPending&&!replacePending)return;
+    clearTimeout(queryTimer);
     const token=++queryToken,page=current,fail=queryFailNext;queryFailNext=false;queryStarts++;queryPending=true;queryError=false;
-    suggestionsOpen=false;suggestionActive=-1;document.activeElement?.blur();rerender(false);
+    suggestionsOpen=false;suggestionActive=-1;if(!keepInput)document.activeElement?.blur();rerender(keepInput);
     // 原型等待仅演示查询状态，不代表线上接口时效。
-    queryTimer=setTimeout(()=>{if(token!==queryToken||page!==current)return;queryPending=false;queryError=fail;rerender(false);},1200);
+    queryTimer=setTimeout(()=>{if(token!==queryToken||page!==current)return;queryPending=false;queryError=fail;rerender(keepInput);},1200);
+  }
+  function commitMineSearch(){
+    if(!usesMineLiveSearch()||mineSearchComposing)return;
+    clearTimeout(mineSearchTimer);const input=document.getElementById('h-search-query');if(!input)return;
+    query=input.value.trim();searchDraft=input.value;selectedCommunity=null;selected.clear();setOpenHouseSwipe();
+    startHousingQuery({keepInput:true,replacePending:true});
+  }
+  function scheduleMineSearch(){
+    if(!usesMineLiveSearch())return;
+    clearTimeout(mineSearchTimer);clearTimeout(queryTimer);queryToken++;queryPending=true;queryError=false;
+    suggestionsOpen=false;suggestionActive=-1;selected.clear();paintHousingQuery();
+    if(mineSearchComposing)return;
+    const page=current;mineSearchTimer=setTimeout(()=>{if(page===current&&usesMineLiveSearch())commitMineSearch();},300);
   }
   function paintHousingQuery(){
     screenEl.querySelectorAll('[data-h-query-lock]').forEach(el=>{el.disabled=false;el.removeAttribute('data-h-query-lock');});
@@ -1169,7 +1185,8 @@ window.originalTaofangHouseCard=houseCard;
     paintCommunitySuggestions();
     screenEl.querySelectorAll('button,input,textarea,select').forEach(el=>{
       const back=el.matches('[aria-label="返回"],[data-back]')||el.closest('.topbar')&&el.matches('[data-go]');
-      const unavailable=queryPending&&!back||queryError&&el.matches('[data-h-send-selected],[data-send-house]');
+      const editableSearch=usesMineLiveSearch()&&el.id==='h-search-query';
+      const unavailable=queryPending&&!back&&!editableSearch||queryError&&el.matches('[data-h-send-selected],[data-send-house]');
       if(unavailable&&!el.disabled){el.dataset.hQueryLock='';el.disabled=true;}
     });
     screenEl.querySelectorAll('.h-property-row,[data-select-card]').forEach(el=>{el.inert=true;el.dataset.hQueryInert='';});
@@ -1180,7 +1197,7 @@ window.originalTaofangHouseCard=houseCard;
   window.addEventListener('click',e=>{
     if(e.target.closest('[data-h-query-retry]')){e.preventDefault();e.stopImmediatePropagation();startHousingQuery();return;}
     if(!queryPending||!queryPages.has(current)||!screenEl.contains(e.target))return;
-    if(e.target.closest('[aria-label="返回"],[data-back]'))return;
+    if(e.target.closest('[aria-label="返回"],[data-back]')||usesMineLiveSearch()&&e.target.id==='h-search-query')return;
     e.preventDefault();e.stopImmediatePropagation();
   },true);
   const ico=(name,size=20)=>{const paths={back:'m15 18-6-6 6-6',home:'m3 10 9-7 9 7v11h-6v-7H9v7H3z',chat:'M4 4h16v13H8l-4 4z',person:'M20 21v-2a6 6 0 0 0-12 0v2M14 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',plus:'M12 4v16M4 12h16',search:'m21 21-5-5M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0',refresh:'M20 7a9 9 0 1 0 1 9M20 2v6h-6',trash:'M3 6h18M8 6V3h8v3M5 6l1 15h12l1-15',send:'m22 2-7 20-4-9-9-4zM11 13 22 2',close:'m6 6 12 12M6 18 18 6',check:'m4 12 5 5L20 6',star:'m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L2.9 9.6l6.3-.9z',chevron:'m9 5 7 7-7 7'};return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(paths[name]||paths.home).split(/(?=M)/).map(p=>`<path d="${p}"/>`).join('')}</svg>`};
@@ -1206,9 +1223,11 @@ window.originalTaofangHouseCard=houseCard;
     panel.innerHTML='<div id="h-community-options" role="listbox" aria-label="小区联想结果">'+choices+'</div><button type="button" class="h-community-support" data-h-consult="" data-h-community-support>搜不到想要的小区？<em>请咨询客服</em></button>';
     if(suggestionActive>=0){input.setAttribute('aria-activedescendant','h-community-option-'+suggestionActive);panel.querySelector('[aria-selected="true"]')?.scrollIntoView({block:'nearest'});}
   }
-  function runHousingKeywordSearch(){if(queryPending)return;const input=document.getElementById('h-search-query');if(!input)return;query=input.value.trim();selectedCommunity=null;searchDraft=null;suggestionsOpen=false;suggestionActive=-1;selected.clear();document.activeElement?.blur();startHousingQuery();}
+  function runHousingKeywordSearch(){if(usesMineLiveSearch()){commitMineSearch();return;}if(queryPending)return;const input=document.getElementById('h-search-query');if(!input)return;query=input.value.trim();selectedCommunity=null;searchDraft=null;suggestionsOpen=false;suggestionActive=-1;selected.clear();document.activeElement?.blur();startHousingQuery();}
   function chooseCommunity(index){if(queryPending)return;const item=communitySuggestions()[index];if(!item)return;selectedCommunity={key:item.key,name:item.name};query=item.name;searchDraft=null;suggestionsOpen=false;suggestionActive=-1;selected.clear();document.activeElement?.blur();startHousingQuery();}
-  document.addEventListener('input',e=>{if(e.target.id!=='h-search-query')return;searchDraft=e.target.value;suggestionsOpen=!!searchDraft.trim();suggestionActive=-1;paintCommunitySuggestions();});
+  document.addEventListener('input',e=>{if(e.target.id!=='h-search-query')return;searchDraft=e.target.value;if(usesMineLiveSearch()){scheduleMineSearch();return;}suggestionsOpen=!!searchDraft.trim();suggestionActive=-1;paintCommunitySuggestions();});
+  document.addEventListener('compositionstart',e=>{if(e.target.id==='h-search-query'&&usesMineLiveSearch()){mineSearchComposing=true;clearTimeout(mineSearchTimer);clearTimeout(queryTimer);queryToken++;}});
+  document.addEventListener('compositionend',e=>{if(e.target.id==='h-search-query'&&usesMineLiveSearch()){mineSearchComposing=false;searchDraft=e.target.value;scheduleMineSearch();}});
   document.addEventListener('focusin',e=>{if(e.target.id==='h-search-query'&&!restoringHouseSearch){searchDraft=e.target.value;suggestionsOpen=!!searchDraft.trim();suggestionActive=-1;paintCommunitySuggestions();}});
   document.addEventListener('pointerdown',e=>{if(e.target.closest('[data-h-community-choice],[data-h-community-support]')){e.preventDefault();return;}if(!e.target.closest('.h-search-wrap')){suggestionsOpen=false;suggestionActive=-1;paintCommunitySuggestions();}});
   document.addEventListener('focusout',e=>{if(e.target.id==='h-search-query'&&!e.relatedTarget?.closest('.h-search-wrap')){suggestionsOpen=false;paintCommunitySuggestions();}});
@@ -1220,7 +1239,7 @@ window.originalTaofangHouseCard=houseCard;
   const hasHouseConditions=()=>!!query.trim()||Object.entries(filters).some(([k,v])=>v&&!(k==='sort'&&v==='default'));
   const rangeTabs=()=>'<div class="h-segment h-management-tabs" role="tablist" aria-label="房源范围"><button data-h-range="mine" role="tab" aria-selected="'+(range==='mine')+'" class="'+(range==='mine'?'on':'')+'">我的房源</button><button data-h-range="all" role="tab" aria-selected="'+(range==='all')+'" class="'+(range==='all'?'on':'')+'">全部房源</button></div>';
   const managementHead=()=>'<div class="h-head h-management-nav"><button data-h-go="housingMe" aria-label="返回">'+ico('back')+'</button>'+rangeTabs()+'<button class="h-record-entry" data-h-go="housingRecords">上传任务</button></div>';
-  const houseSearch=()=>'<div class="h-search-wrap"><form class="search h-property-search" id="housing-search"><span class="search-icon">'+icon('search',20)+'</span><input id="h-search-query" aria-label="房源名称或小区" '+(supportsCommunitySuggestions()?'role="combobox" aria-autocomplete="list" aria-controls="h-community-options" aria-expanded="false" ':'')+'autocomplete="off" enterkeyhint="search" placeholder="输入房源或小区名称、别名" value="'+escape(searchDraft??query)+'"><button type="submit" class="h-search-submit">搜索</button></form><div id="h-community-suggestions" class="h-community-suggestions" hidden></div></div>';
+  const houseSearch=()=>'<div class="h-search-wrap"><form class="search h-property-search" id="housing-search"><span class="search-icon">'+icon('search',20)+'</span><input id="h-search-query" aria-label="房源名称或小区" '+(supportsCommunitySuggestions()?'role="combobox" aria-autocomplete="list" aria-controls="h-community-options" aria-expanded="false" ':'')+'autocomplete="off" enterkeyhint="search" placeholder="输入房源或小区名称、别名" value="'+escape(searchDraft??query)+'">'+(usesMineLiveSearch()?'':'<button type="submit" class="h-search-submit">搜索</button>')+'</form><div id="h-community-suggestions" class="h-community-suggestions" hidden></div></div>';
   const houseFilters=()=>'<div class="picker-filterbar v4 h-property-filterbar"><button data-h-filter="price" aria-haspopup="dialog" class="'+(filters.min||filters.max?'is-active':'')+'">价格</button><button data-h-filter="room" aria-haspopup="dialog" class="'+(filters.room||filters.areaMin||filters.areaMax||filters.bath?'is-active':'')+'">房型</button><button data-h-filter="sort" aria-haspopup="dialog" class="'+(filters.sort!=='default'?'is-active':'')+'">排序</button><button data-h-filter="source" aria-haspopup="dialog" class="'+(filters.channel?'is-active':'')+'">渠道</button></div>';
   const houseCount=n=>'<div class="h-row h-house-count"><span class="h-muted">共'+n+'套</span>'+(hasHouseConditions()?'<button class="h-link" data-h-clear>清空条件</button>':'')+'</div>';
   const emptyHouses=(picking=false,noMine=false)=>'<div class="h-empty h-property-empty" data-h-empty-houses>'+ico('home',36)+'<h4>'+(noMine&&!hasHouseConditions()?'还没有上传房源':'暂无符合条件的房源')+'</h4><p>'+(picking?'可调整条件、上传房源，或咨询客服。':'可调整条件、上传房源，或咨询客服。')+'</p><div class="h-empty-actions"><button class="h-primary" data-h-go="housingUpload">上传房源</button><button class="h-outline" data-h-consult="">咨询客服</button></div>'+(picking?'<small>上传后请返回选房，选中后再发送给客户</small>':'')+'</div>';
@@ -1356,7 +1375,7 @@ window.originalTaofangHouseCard=houseCard;
   const actions=document.querySelector('.toolbar-actions');actions.insertAdjacentHTML('beforeend','<div class="toolbar-row"><span class="h-muted">本地演示 · 西安 · 无真实采集或消息发送</span></div><div class="toolbar-row" data-h-demo-tools><label class="h-muted">房源演示 <select class="toolbtn" data-h-demo-scenario aria-label="房源演示场景"><optgroup label="提交示例"><option value="submit:all-styles">正常上传 · 四种链接</option><option value="submit:collection-failure">部分失败 · 成功＋采集失败</option><option value="submit:duplicate">链接去重 · 重复＋普通链接</option><option value="submit:ordinary">普通消息 · 未命中链接</option><option value="submit:ten">多套上传 · 10套链接</option></optgroup><optgroup label="失败结果">'+H.failureCases.map(x=>'<option value="result:'+x.code+'">'+escape(x.label)+'</option>').join('')+'</optgroup></select></label><button class="toolbtn" data-h-demo-run>填入示例</button><button class="toolbtn" data-h-reset>重置演示</button></div>');
   document.querySelector('.notes').insertAdjacentHTML('beforeend','<div class="note-card"><h3>本次房源需求</h3><p>在完整原型上增量修改，保留所有既有内容。我的房源接入原个人中心；链接上传接入原客户会话。</p><p>上传统一成功提示，按来源时效决定复用或更新；不等待整条消息完成才发送。手动更新暂按来源刷新。</p></div>');
   const oldGo=go;go=function(id,push=true){if(!hPages.has(id))return oldGo(id,push);if(id==='housingMine')range='mine';if(id==='housingAll'){range='all';selected.clear();}if(push&&current!==id)historyStack.push(current);current=id;screenEl.classList.add('housing-scope');screenEl.innerHTML=pages[id]();screenEl.scrollTop=0;const m=configs[id];document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageDesc').textContent=m[1];document.getElementById('ruleChips').innerHTML=m[2].map(x=>`<span class="note-chip">${x}</span>`).join('');document.getElementById('ruleText').textContent=m[3];buildNav('');closeSheet();};
-  function rerender(preserve=true){if(!hPages.has(current)&&current!=='homePicker')return;if(swipeGesture?.horizontal){pendingCardRender=true;return;}const pos=screenEl.scrollTop,input=preserve===false?null:document.activeElement?.id,value=input?document.getElementById(input)?.value:null,selection=document.activeElement?.selectionStart;screenEl.innerHTML=pages[current]();screenEl.scrollTop=pos;if(input&&document.getElementById(input)){const el=document.getElementById(input);if(value!==null)el.value=value;restoringHouseSearch=true;el.focus();restoringHouseSearch=false;try{el.setSelectionRange(selection,selection)}catch{}}paintCommunitySuggestions();paintHousingQuery();}
+  function rerender(preserve=true){if(!hPages.has(current)&&current!=='homePicker')return;if(mineSearchComposing&&usesMineLiveSearch()&&document.activeElement?.id==='h-search-query')return;if(swipeGesture?.horizontal){pendingCardRender=true;return;}const pos=screenEl.scrollTop,input=preserve===false?null:document.activeElement?.id,value=input?document.getElementById(input)?.value:null,selection=document.activeElement?.selectionStart;screenEl.innerHTML=pages[current]();screenEl.scrollTop=pos;if(input&&document.getElementById(input)){const el=document.getElementById(input);if(value!==null)el.value=value;restoringHouseSearch=true;el.focus();restoringHouseSearch=false;try{el.setSelectionRange(selection,selection)}catch{}}paintCommunitySuggestions();paintHousingQuery();}
   const dialog=html=>{sheet.innerHTML='<div class="h-dialog" role="dialog" aria-modal="true">'+html+'</div>';sheet.classList.add('on');sheet.querySelector('input,button,select')?.focus()};
 
   const filterScope={price:['min','max'],room:['room','areaMin','areaMax','bath'],sort:['sort'],source:['channel']};
