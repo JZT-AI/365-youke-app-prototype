@@ -864,7 +864,7 @@
       function records(){if(finMode==='empty')return[];return [...baseRecords,...orders.map(orderNow).filter(o=>!o.pending).map(o=>({id:'credit-'+o.id,type:'recharge',title:'套餐充值到账',time:o.arrived||o.time,paid:o.paid,gift:o.gift,available:o.paid+o.gift,order:o.id,reason:'套餐充值，含付费有客币及套餐赠送',source:'套餐充值 · 付费与赠送到账'}))].sort((a,b)=>b.time.localeCompare(a.time))}
       function historyRecords(){return baseRecords.filter(r=>r.holdTime&&r.type==='return'&&!r.settlementGroup).map(r=>({...r,id:'prior-'+r.id,type:'hold',title:'线索预扣',time:r.holdTime,paid:r.paid,gift:r.gift,available:-totalOf(r),reason:'本轮线索分配预扣',current:false,outcome:'已返还',parent:r.id,ended:false,giftEnd:undefined}))}
       const allRecords=()=>finMode==='empty'?[]:[...records(),...historyRecords()].sort((a,b)=>b.time.localeCompare(a.time));
-      const currentRecord=()=>allRecords().find(r=>r.id===finRecordId&&!r.order);
+      const currentRecord=()=>allRecords().find(r=>r.id===finRecordId);
       const nameOf=r=>leads[r.lead]?.name||r.name||'';
       const labelOf=r=>r.title;
       const totalOf=r=>(r.paid||0)+(r.gift||0);
@@ -904,7 +904,6 @@
         const mark=`<span class='ledger-icon ${r.type==='gift'||r.type==='recharge'?'gift':''}'>${icon(kindIcon[r.type],18)}</span>`;
         const leadLink=r.lead?`<button class='fin-list-lead' data-fin-view-lead='${r.lead}' aria-label='查看${esc(nameOf(r))}的线索${r.lead}'>${esc(nameOf(r))} · 线索 ${r.lead} ${icon('chevron',11)}</button>`:`<p>${esc(caption)}</p>`;
         const content=`${mark}<div class='ledger-copy'><b>${esc(labelOf(r))}</b>${leadLink}${extra}</div>`;
-        if(r.order)return `<a class='ledger-row fin-row-button' href='https://ax047hrq4li.feishu.cn/docx/TJS0dC7S1o22DoxjcIMcsafSndc' target='_blank' rel='noopener noreferrer' title='充值详情由另一产品设计，查看对应产品文档'>${content}<span class='fin-amount-stack'><span class='ledger-amount fin-record-amount ${eventTone(r)}'>${signed(eventAmount(r))}</span><time class='fin-row-time'>${r.time.slice(5)}</time></span></a>`;
         if(r.lead)return `<article class='ledger-row fin-row-button fin-record-row' data-fin-record='${r.id}'>${content}<div class='fin-amount-stack'><button class='ledger-amount fin-record-amount ${eventTone(r)}' data-fin-record='${r.id}' aria-label='查看${esc(nameOf(r))}${esc(labelOf(r))}的财务详情'>${signed(eventAmount(r))}</button><time class='fin-row-time'>${r.time.slice(5)}</time></div></article>`;
         return `<button class='ledger-row fin-row-button' data-fin-record='${r.id}'>${content}<span class='fin-amount-stack'><span class='ledger-amount fin-record-amount ${eventTone(r)}'>${signed(eventAmount(r))}</span><time class='fin-row-time'>${r.time.slice(5)}</time></span></button>`;
       }
@@ -930,9 +929,14 @@
         const empty=finMode==='empty'?`<div class='fin-empty'><span>${icon('file',32)}</span><h4>${isFree?'暂无免扣记录':'暂无有客币明细'}</h4><p>${isFree?'发生免扣后，记录将在这里展示。':'账户发生变动后，记录将在这里展示。'}</p></div>`:stateBlock('empty');
         return finScreen(`<div class='content fin-page'><section id='finLedgerPanel'>${isFree?'':`<div class='fin-type-grid' role='group' aria-label='明细类型'>${finTypes.map(([key,label])=>`<button data-fin-type='${key}' class='chip ${finType===key?'on':''}' aria-pressed='${finType===key}'>${label}</button>`).join('')}</div>`}<div class='fin-list-tools'><button class='fin-date-trigger' data-fin-date='records'>${icon('filter',15)}${esc(dateText(finDates))}</button><span>${rows.length} 条</span></div>${!isFree&&finType==='hold'?`<label class='fin-current-only'><input type='checkbox' data-fin-current-only ${finCurrentOnly?'checked':''}>仅看当前预扣</label>`:''}<div class='search fin-search'>${icon('search',17)}<input data-fin-search value='${esc(finQuery)}' placeholder='${isFree?'搜索客户或线索编号':'搜索流水、订单、线索或业务编号'}' aria-label='${isFree?'搜索客户或线索编号':'搜索流水、订单、线索或业务编号'}'>${finQuery?`<button data-fin-search-clear aria-label='清空搜索'>${icon('close',16)}</button>`:''}</div><div class='${isFree?'waiver-list':'ledger-list'}' id='finRecordList'>${rows.length?rows.map(r=>isFree?waiverRow(r):recordRow(r)).join(''):empty}</div>${rows.length?`<p class='fin-list-end'>已展示当前条件下的全部记录</p>`:''}</section></div>`,isFree?'免扣记录':'有客币明细');
       }
+      function rechargeLedgerDetail(r){
+        const o=orders.map(orderNow).find(o=>o.id===r.order);if(!o)return finScreen(stateBlock('missing',true),'有客币详情',{detail:true});
+        return finScreen(`<div class='content fin-page'><section class='state fin-detail-hero'><span class='fin-detail-mark warm'>${icon('coin',25)}</span><h3>套餐充值到账</h3><div class='fin-detail-number fin-increase'>${signed(totalOf(r))}</div></section><section class='detail-section fin-card'><h4>到账构成</h4><div class='fin-order-part'><span class='fin-record-icon warm'>${icon('coin',20)}</span><div><b>付费有客币</b><small>无有效期</small></div><strong class='fin-increase'>${signed(r.paid)}</strong></div><div class='fin-order-part'><span class='fin-record-icon purple'>${icon('plus',20)}</span><div><b>赠送有客币</b><small>到期 ${esc(o.giftEnd)}</small></div><strong class='fin-increase'>${signed(r.gift)}</strong></div></section><section class='detail-section fin-card'><h4>充值信息</h4>${pair('订单号',o.number,o.number)}${pair('充值时间',o.time)}${pair('到账时间',r.time)}${pair('充值渠道',o.channel)}${pair('实际支付',`¥${o.cash.toFixed(2)}`)}${pair('原因',r.reason)}${pair('记录编号','LS-'+r.id,'LS-'+r.id)}</section></div>`,'有客币详情',{detail:true});
+      }
       function recordDetail(){
         const r=currentRecord();
         if(!r)return finScreen(stateBlock('empty',true),'有客币详情',{detail:true});
+        if(r.type==='recharge')return rechargeLedgerDetail(r);
         const reason=r.reason;
         let result='';
         const linked=leads[r.lead];
@@ -1052,11 +1056,11 @@
       pages.platformFreeDetail=()=>platformFreeSample(pages.linOldDetail());pages.platformFreeChat=()=>platformFreeSample(pages.linOldChat());
       meta.platformFreeDetail=['张女士·免扣关联线索','免扣记录对应的原轮次',['沿用线索详情'],'平台免扣记录打开对应轮次，不设置免扣详情。'];meta.platformFreeChat=['张女士·历史会话','原轮次历史会话',['沿用会话'],'沿用原线索历史会话。'];
       Object.assign(meta,{
-        wallet:['有客币首页','F02 · 当前城市的可用余额、预扣与最近变动',['可用不重复减预扣','当前城市账户'],'付费可用＋赠送可用＝可用余额。预扣总数及两类构成集中在预扣卡片，点击可查看当前占用。充值购买、充值记录和充值详情由另一产品设计；本原型点击相关入口打开对应产品文档。'],
+        wallet:['有客币首页','F02 · 当前城市的可用余额、预扣与最近变动',['可用不重复减预扣','当前城市账户'],'付费可用＋赠送可用＝可用余额。预扣总数及两类构成集中在预扣卡片，点击可查看当前占用。充值购买与充值记录入口由另一产品承接；本明细中的充值到账记录进入站内有客币详情，展示到账构成及关联充值信息。'],
         filter:['客户筛选','服务、结算、跟进、收藏与时间条件',['结算状态可多选','条件取交集'],'结算状态默认全部；同组多选满足任一项，跨组与搜索取交集。确定后生效，重置后需确定；返回取消本次修改。'],
         customers:['客户列表 · 结算状态','F01 · 在原客户卡片中补充本轮结算结果',['服务与结算分开','返还失效提示'],'结算标签位于服务状态之后。预扣、扣款、返还标签打开本轮对应财务详情；免扣标签进入免扣记录并按对应线索 ID 检索；返回保留客户列表条件与位置。'],
         coinFlow:['有客币明细','F05 · 账户事件摘要与条件查询',['线索直达原轮次','财务详情可追溯'],'首页切换有客币明细与免扣记录，查看全部分别进入各自列表，列表内不设 Tab。预扣转实扣保留预扣、预扣返还、实扣三笔独立流水，各笔用同一结算单号关联；返回保留来源和查询条件。'],
-        flowDetail:['有客币详情','F06 · 单笔事件的原因、构成与关联信息',['结算结果可追溯','查看对应轮次线索'],'详情解释预扣、实扣、返还、赠送和到期结果；返还按原数量展示赠送币到期时间，失效通过对应的独立到期记录表达；线索入口进入本笔所属轮次。'],
+        flowDetail:['有客币详情','F06 · 单笔事件的原因、构成与关联信息',['结算结果可追溯','查看对应轮次线索'],'详情解释预扣、实扣、返还、充值到账、赠送和到期结果；返还按原数量展示赠送币到期时间，失效通过对应的独立到期记录表达；线索入口进入本笔所属轮次。'],
         waiverRecords:['免扣记录','沿用 V1.0 独立权益记录',['线索激活免扣 / 平台免扣','仅关联线索'],'免扣不属于有客币流水，不展示币数量且无详情。列表直接展示 V1.0 事件名称及原因，客户和线索入口直达对应轮次；具体列表不设 Tab。'],
       });
       const coinGroup=groups.find(g=>g.name==='有客币');
@@ -1084,7 +1088,7 @@
         const waiver=waiverEvents.find(r=>r.id===id);if(waiver){const lead=leads[waiver.lead];if(!lead){showToast('该线索暂不可查看');return}activeCustomer=lead.key;go(lead.route);return}
         const r=allRecords().find(r=>r.id===id);if(!r){showToast('记录暂不可查看');return}
         finResetPosition=true;finMode='normal';finRefreshNotice='';
-        if(r.order){openRechargeProductDoc('充值详情')}else{finRecordId=id;go('flowDetail')}
+        finRecordId=id;go('flowDetail')
       }
       window.addEventListener('click',e=>{
         const target=e.target.closest('[data-fin-home-tab],[data-fin-back],[data-fin-nav],[data-fin-type],[data-fin-record],[data-fin-order],[data-fin-order-filter],[data-fin-current-holds],[data-fin-all-records],[data-fin-expiry],[data-fin-close],[data-fin-date],[data-fin-date-preset],[data-fin-date-apply],[data-fin-date-reset],[data-fin-refresh],[data-fin-retry],[data-fin-clear],[data-fin-search-clear],[data-fin-copy],[data-fin-waiver-lead],[data-fin-view-lead],[data-fin-purchase]');
