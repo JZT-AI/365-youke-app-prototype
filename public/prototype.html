@@ -1040,7 +1040,7 @@
         const original=pages[route];pages[route]=()=>{
           const t=document.createElement('template');t.innerHTML=original();const row=t.content.querySelector('.validity-row');
           if(row){const l=leads[id],tag=document.createElement('span');tag.className='validity-chip fin-customer-tag';tag.textContent=l.settle;row.insertBefore(tag,row.children[1]||null);}
-          const allocation=t.content.querySelector('.detail-allocation');if(allocation)allocation.textContent=`线索 ${id} · 分配 ${leads[id].allocated}`;
+          const allocation=t.content.querySelector('.detail-allocation');if(allocation)allocation.textContent=`分配时间 ${leads[id].allocated}`;
           return t.innerHTML.replaceAll('08-18 16:35','10-12 16:35').replaceAll('08-26 18:12','10-13 11:00').replaceAll('08-12 16:00','10-13 12:00');
         };
       }
