@@ -68,7 +68,7 @@
     item.houseId=h.id;item.collected=true;item.reusedHouse=reused;
     if(reused)item.events.push({label:'来源时效与可用性检查已完成',time:stamp()});
     item.events.push({label:'业务房源已生成，湖仓已可消费',time:stamp()});
-    if(h.status==='下架'){item.status='failed';item.error='来源房源已失效，暂不可用';item.associationStatus='not_started';return;}
+    if(['疑似下架','下架'].includes(h.status)){item.status='failed';item.error='来源房源已失效，暂不可用';item.associationStatus='not_started';return;}
     if(t.entry==='private'&&!t.owner){item.status='failed';item.associationStatus='needs_identity';item.error='房源已收录，尚未确认您的有客账号，未完成上传';item.events.push({label:item.error,time:stamp()});return;}
     if(t.owner){const rk=t.owner+'|'+item.key;
       if((s.revisions[rk]||0)!==item.revision){item.status='failed';item.associationStatus='failed';item.failureCode='BROKER_ASSOCIATION_FAILED';item.error='本人房源关系已删除，未重新加入我的房源';item.events.push({label:item.error,time:stamp()});return;}
@@ -99,7 +99,8 @@
         if(t.items.slice(0,t.items.indexOf(item)).some(i=>!i.excluded&&i.status!=='failed'&&!['sent','reused','failed'].includes(i.sendStatus)))continue;
         if(!item.sendStarted){item.sendStarted=Date.now();item.sendStatus='sending';changed=true;}
         else if(Date.now()-item.sendStarted>500){const rk=OWNER+'|'+item.key;
-          if(t.owner&&(!owns(s,item.key)||(s.revisions[rk]||0)!==item.revision)){item.sendStatus='failed';item.error='房源已从我的房源删除，未发送本套房源';}
+          if(['疑似下架','下架'].includes(s.houses.find(h=>h.key===item.key)?.status)){item.sendStatus='failed';item.error='房源已下架或疑似下架，未发送本套房源';}
+          else if(t.owner&&(!owns(s,item.key)||(s.revisions[rk]||0)!==item.revision)){item.sendStatus='failed';item.error='房源已从我的房源删除，未发送本套房源';}
           else if(t.failSend){item.status='failed';item.error='本套消息发送失败';item.sendStatus='failed';}
           else{item.sendStatus='sent';item.sentAt=stamp();item.sentAtMs=Date.now();if(!t.sentKeys.includes(item.key))t.sentKeys.push(item.key);item.events.push({label:'本套小程序房源已发送',time:item.sentAt});}changed=true;
         }continue;
@@ -115,7 +116,7 @@
         item.sharedTaskId='';item.reusingPending=false;
       }
       if(item.status==='waiting'&&existing){
-        if(existing.status==='下架'){finish(s,t,item,existing,true);changed=true;continue;}
+        if(['疑似下架','下架'].includes(existing.status)){finish(s,t,item,existing,true);changed=true;continue;}
         const fresh=existing.sourceCheckedAtMs&&Date.now()-existing.sourceCheckedAtMs<DEMO_FRESH_MS;
         if(!fresh){
           if(!item.sourceUpdateStarted){item.sourceUpdateStarted=Date.now();item.sourceCheck='updating';item.events.push({label:'检查来源信息并更新房源',time:stamp()});changed=true;continue;}
