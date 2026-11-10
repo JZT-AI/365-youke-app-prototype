@@ -6,13 +6,14 @@
   ];
   const [, housing, coin, audit, announcement] = categories.map(([name]) => name);
   const coinLedgerRoute = '/wallet/records';
-  const appRouteScreens = new Map([[coinLedgerRoute,'coinFlow']]);
+  const walletRoute = '/wallet';
+  const appRouteScreens = new Map([[walletRoute,'wallet'],[coinLedgerRoute,'coinFlow']]);
   const rows = [
     {id:'housing-upload', category:housing, title:'房源上传完成', body:'你上传的 2 套房源已处理完成，可前往房源管理查看。', app:'housingMine', action:'查看房源管理'},
     {id:'city-event', category:announcement, title:'西安经纪人业务交流会开放报名', body:'11月20日，我们邀请城市服务团队分享客户跟进经验。活动地点为西安曲江会议中心，报名截至11月18日 18:00。', image:'event', path:'pages/events/detail?id=xa-20261120', action:'查看活动并报名'},
     {id:'audit-in', category:audit, title:'入驻审核通过', body:'你的西安入驻资料已通过审核，可以开始承接服务。', app:'messageAuditResult', auditType:'新身份入驻'},
     {id:'bonus', category:announcement, title:'完成3笔指定业务，可获100有客币', body:'11月10日至25日，在365有客完成3笔符合活动规则的客户带看，可获100有客币。有效业务认定条件见活动详情。', path:'pages/events/detail?id=showing-bonus', action:'查看活动规则'},
-    {id:'recharge', category:coin, title:'首次充值满99元，加赠50有客币', body:'截至11月30日，首次单笔充值满99元可额外获得50有客币。赠币的使用范围和有效期详见活动规则。', appRoute:coinLedgerRoute},
+    {id:'recharge', category:coin, title:'首次充值满99元，加赠50有客币', body:'截至11月30日，首次单笔充值满99元可额外获得50有客币。赠币的使用范围和有效期详见活动规则。', appRoute:walletRoute},
     {id:'coin-join', category:coin, title:'有客币-入驻赠送', body:'入驻赠送100有客币已到账。', appRoute:coinLedgerRoute},
     {id:'renew', category:announcement, title:'承接服务续期活动：续3个月赠权益', body:'11月10日至30日，续购3个月承接服务可额外获得一次业务辅导权益。适用套餐见活动详情。', path:'pages/events/detail?id=renewal-nov', action:'查看续期活动'},
     {id:'audit-in-reject', category:audit, title:'入驻审核未通过', body:'从业资格证图片不清晰，请更新后重新提交。', app:'messageAuditResult', auditType:'新身份入驻', failureReason:'从业资格证图片不清晰。'},
@@ -140,9 +141,7 @@
     const pinned = pinnedNames.map(name=>summaries.find(row=>row.name===name));
     const byTime = [...summaries.filter(row=>!pinnedNames.includes(row.name)),...conversations]
       .sort((a,b)=>b.time.localeCompare(a.time));
-    const coinLedgerRoute = '/wallet/records';
-  const appRouteScreens = new Map([[coinLedgerRoute,'coinFlow']]);
-  const rows = [...pinned,...byTime];
+    const rows = [...pinned,...byTime];
     const blocked = selectedCity==='xian' ? template.content.querySelector('.blocked-entry') : null;
     return screen(`<div class="youke-mixed-list" aria-label="消息列表">${rows.map(row=>row.html).join('')}${blocked?.outerHTML||''}</div>${notificationHint()}`,'消息',{back:false,bottom:'messageManagement'});
   };

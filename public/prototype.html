@@ -909,13 +909,14 @@
         return `<div class='fin-empty' role='status'><span>${icon(empty?'file':'alert',32)}</span><h4>${empty?(detail?'暂无可查看的记录':'当前条件下暂无记录'):missing?'记录暂不可查看':'暂时无法加载'}</h4><p>${empty?'可调整筛选条件后查看。':'请稍后重试，不影响已发生的结算结果。'}</p><button class='secondary' data-fin-${empty?(detail?'back':'clear'):'retry'}>${empty?(detail?'返回上一页':'清空筛选'):'重新加载'}</button></div>`;
       }
       function finScreen(body,title,{home=false,right='',detail=false}={}){
+        const showBack=!home||historyStack.at(-1)==='messageCategory';
         let content=body;
-        if(selectedCity!=='xian')return screen(`<div class='content fin-page'><div class='fin-empty'><span>${icon('wallet',32)}</span><h4>当前城市暂未开通本期服务</h4><p>请在已开通的城市账户查看对应记录。</p><button class='secondary' data-go='citySwitch'>切换账号</button></div></div>`,title,{back:!home,bottom:home?'wallet':undefined});
+        if(selectedCity!=='xian')return screen(`<div class='content fin-page'><div class='fin-empty'><span>${icon('wallet',32)}</span><h4>当前城市暂未开通本期服务</h4><p>请在已开通的城市账户查看对应记录。</p><button class='secondary' data-go='citySwitch'>切换账号</button></div></div>`,title,{back:showBack,bottom:home?'wallet':undefined});
         if(finMode==='loading')content=stateBlock('loading',detail);
         else if(finMode==='error')content=stateBlock('error',detail);
         else if(finMode==='missing'&&detail)content=stateBlock('missing',true);
         const notice=finMode==='refreshError'||finRefreshNotice?`<div class='fin-inline-error' role='status'>${esc(finRefreshNotice||'刷新失败，以下为上次成功加载的内容。')}<button data-fin-retry>重试</button></div>`:'';
-        return screen(`${notice}${content}`,title,{back:!home,right:right||(home?`<div class='fin-wallet-actions'><button class='top-action' data-go='coinGuide'>使用说明</button></div>`:`<button class='iconbtn' data-fin-refresh ${finBusy?'disabled':''} aria-label='刷新'>${icon('refresh',19)}</button>`),bottom:home?'wallet':undefined});
+        return screen(`${notice}${content}`,title,{back:showBack,right:right||(home?`<div class='fin-wallet-actions'><button class='top-action' data-go='coinGuide'>使用说明</button></div>`:`<button class='iconbtn' data-fin-refresh ${finBusy?'disabled':''} aria-label='刷新'>${icon('refresh',19)}</button>`),bottom:home?'wallet':undefined});
       }
       function recordRow(r,compact=false){
         const caption=r.lead?nameOf(r):(r.source||r.reason);
