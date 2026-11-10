@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="218" viewBox="0 0 640 218" role="img" aria-label="西安经纪人业务交流会">
+ <rect width="640" height="218" rx="14" fill="#e8f1ff"/>
+ <path d="M375 218V150h46v-37h36v-30h27v30h47v-18h37v55h42v68z" fill="#a9c8f5"/>
+ <path d="M480 218v-60h29v-22h35v29h30v-44h38v43h28v54z" fill="#6799e9"/>
+ <path d="M345 218h295" stroke="#2d65bd" stroke-width="3"/>
+ <text x="34" y="53" fill="#345b9b" font-size="21" font-family="sans-serif">365有客 · 西安</text>
+ <text x="34" y="111" fill="#163a74" font-size="38" font-weight="bold" font-family="sans-serif">经纪人业务交流会</text>
+ <text x="35" y="162" fill="#345b9b" font-size="22" font-family="sans-serif">11月20日 · 西安曲江会议中心</text>
+</svg>

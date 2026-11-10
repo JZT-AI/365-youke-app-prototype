@@ -1,0 +1,42 @@
+.youke-inbox{padding:14px 14px 22px;background:#f6f8fc;min-height:calc(100% - 116px);color:#172538}
+.youke-inbox-list{display:grid;gap:8px}
+.youke-notice-cover{width:100%;height:auto;display:block;border-radius:7px;margin-top:4px}
+.youke-inbox-empty{padding:30px 16px;text-align:center;color:#68788c;font-size:13px}
+.youke-mini-demo{padding:20px 16px;color:#172538}
+.youke-mini-demo h2{font-size:20px;margin:12px 0;line-height:1.35}
+.youke-mini-demo>span{font-size:12px;color:#285fb8}
+.youke-mini-demo code{display:block;overflow-wrap:anywhere;background:#eef3fb;padding:10px;border-radius:6px;margin-top:12px;font-size:11px}
+
+.youke-mixed-list{background:#fff;color:#172538;min-height:calc(100% - 116px)}
+.youke-category-row,.youke-mixed-list .message-list-row{position:relative;display:flex;align-items:center;gap:11px;min-height:69px;width:100%;padding:10px 13px;text-align:left;background:#fff;color:inherit;font:inherit;cursor:pointer}
+.youke-category-row{border:0;border-bottom:1px solid #eef0f5}
+.youke-category-icon{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:50%;background:linear-gradient(145deg,#6d9fff,#3c6ed9);color:#fff}
+.youke-category-icon.green{background:linear-gradient(145deg,#49caa8,#138e78)}
+.youke-category-icon.amber{background:linear-gradient(145deg,#f7bd4c,#e98727)}
+.youke-category-icon.purple{background:linear-gradient(145deg,#a889ef,#7959cf)}
+.youke-category-copy,.youke-mixed-list .message-copy{display:grid;min-width:0;flex:1;gap:4px}
+.youke-category-copy strong,.youke-mixed-list .message-copy b{font-size:14px;font-weight:650;line-height:19px}
+.youke-category-copy small,.youke-mixed-list .message-copy p{color:#657187;font-size:12px;line-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 16px 0 0;padding:0}
+.youke-category-row time,.youke-mixed-list .message-list-row time{position:absolute;top:14px;right:13px;color:#657187;font-size:10px;line-height:14px;white-space:nowrap}
+.youke-category-unread{position:absolute;right:15px;bottom:16px;width:6px;height:6px;border-radius:50%;background:#ef4545}
+.youke-category-inbox{min-height:calc(100% - 56px)}
+
+.youke-category-inbox{background:#f4f5f7;padding:4px 13px 24px}
+.youke-notice-item{min-width:0}
+.youke-notice-time{display:block;margin:14px auto 8px;width:max-content;padding:3px 8px;border-radius:5px;background:#e5e8ee;color:#596577;font-size:11px;line-height:16px}
+.youke-notice-card{background:#fff;border:1px solid #e9ebf1;border-radius:9px;overflow:hidden}
+.youke-notice-content{padding:13px 12px 11px}
+.youke-notice-content h3{font-size:15px;line-height:1.45;margin:0;overflow-wrap:anywhere}
+.youke-card-unread{display:inline-block;width:6px;height:6px;margin-left:6px;border-radius:50%;background:#ef4545;vertical-align:2px}
+.youke-notice-content .youke-notice-cover{margin-top:9px}
+.youke-notice-body{font-size:13px;line-height:1.65;color:#586678;white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0 0}
+.youke-notice-action{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:40px;padding:8px 12px;border:0;border-top:1px solid #eef0f4;background:#fff;color:#172538;font:inherit;font-size:13px;cursor:pointer}
+
+.youke-mixed-list:has(+.youke-notification-hint){padding-bottom:47px}
+.youke-notification-hint{position:absolute;z-index:7;bottom:70px;left:0;right:0;display:flex;align-items:center;min-height:44px;padding:5px 10px;background:var(--brandsoft);color:#9d3713;border-top:1px solid #ffdccb}
+.youke-hint-close,.youke-hint-open{border:0;background:transparent;color:inherit;cursor:pointer}
+.youke-hint-close{width:29px;height:34px;flex:none;display:grid;place-items:center}
+.youke-hint-open{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1;text-align:left;padding:0;min-height:34px;font:inherit;font-size:12px;font-weight:650}
+.youke-hint-open strong{display:inline-flex;align-items:center;gap:3px;flex:none;background:var(--brand);color:#501e0b;padding:4px 9px;border-radius:99px;font-size:11px}
+.youke-system-settings .card>p{font-size:12px;color:#68788c;margin:6px 0 12px}
+.youke-system-settings [role=switch]{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 0 0;border:0;border-top:1px solid #eef0f4;background:none;color:#172538;font:inherit;cursor:pointer}
