@@ -4,7 +4,7 @@
     ['客户跟进提醒', 'users', 'blue'], ['房源维护通知', 'home', 'green'],
     ['有客币提醒', 'coin', 'amber'], ['审核通知', 'shield', 'purple'], ['平台公告', 'bell', 'blue'],
   ];
-  const [, housing, coin, audit, announcement] = categories.map(([name]) => name);
+  const [followUp, housing, coin, audit, announcement] = categories.map(([name]) => name);
   const coinLedgerRoute = '/wallet/records';
   const walletRoute = '/wallet';
   const appRouteScreens = new Map([[walletRoute,'wallet'],[coinLedgerRoute,'coinFlow']]);
@@ -83,6 +83,9 @@
         markRead(entry.target.dataset.noticeId);
         entry.target.removeAttribute('data-notice-unread');
         entry.target.querySelector('.youke-card-unread')?.remove();
+        if (!getRows().some(row=>row.category===category&&!read.has(row.id))) {
+          screenEl.querySelector('[data-message-shortcut][aria-pressed="true"] .youke-shortcut-unread')?.remove();
+        }
         observer.unobserve(entry.target);
       }
     },{root:screenEl,threshold:.5});
@@ -117,6 +120,19 @@
       };
     });
   }
+  const shortcuts = [
+    ['会话','','message','blue'], ['有客币',coin,'coin','amber'],
+    ['房源',housing,'home','green'], ['审核',audit,'shield','purple'],
+  ];
+  function messageShortcuts(activeCategory, messages) {
+    return `<nav class="youke-message-shortcuts" aria-label="消息分类">${shortcuts.map(([label,name,symbol,tone])=>{
+      const unread = name && messages.some(row=>row.category===name&&!read.has(row.id));
+      return `<button type="button" data-message-shortcut="${safe(name)}" aria-pressed="${name===activeCategory}">
+        <span class="youke-category-icon ${tone}" aria-hidden="true">${icon(symbol,21)}</span>
+        <span>${label}</span>${unread?'<i class="youke-shortcut-unread" aria-label="有未读站内信"></i>':''}
+      </button>`;
+    }).join('')}</nav>`;
+  }
   function notificationHint() {
     if (systemNotificationEnabled || notificationHintDismissed) return '';
     return `<aside class="youke-notification-hint" aria-label="消息通知权限提示">
@@ -136,23 +152,26 @@
     const template = document.createElement('template');
     template.innerHTML = baseCustomerMessages();
     const conversations = selectedCity==='xian' ? conversationRows(template) : [];
-    const summaries = categoryRows(getRows());
-    const pinnedNames = [announcement,coin];
-    const pinned = pinnedNames.map(name=>summaries.find(row=>row.name===name));
-    const byTime = [...summaries.filter(row=>!pinnedNames.includes(row.name)),...conversations]
-      .sort((a,b)=>b.time.localeCompare(a.time));
-    const rows = [...pinned,...byTime];
+    const messages = getRows();
+    const summaries = categoryRows(messages);
+    const pinned = summaries.find(row=>row.name===announcement);
+    const followUpSummary = summaries.find(row=>row.name===followUp);
+    const byTime = [followUpSummary,...conversations].sort((a,b)=>b.time.localeCompare(a.time));
+    const rows = [pinned,...byTime];
     const blocked = selectedCity==='xian' ? template.content.querySelector('.blocked-entry') : null;
-    return screen(`<div class="youke-mixed-list" aria-label="消息列表">${rows.map(row=>row.html).join('')}${blocked?.outerHTML||''}</div>${notificationHint()}`,'消息',{back:false,bottom:'messageManagement'});
+    return screen(`${messageShortcuts('',messages)}<div class="youke-mixed-list" aria-label="消息列表">${rows.map(row=>row.html).join('')}${blocked?.outerHTML||''}</div>${notificationHint()}`,'消息',{back:false,bottom:'messageManagement'});
   };
   pages.messages = pages.messageManagement;
   pages.messageCategory = () => {
-    const messages = getRows().filter(row=>row.category===category);
-    return screen(`<div class="youke-inbox youke-category-inbox">
+    const allMessages = getRows();
+    const messages = allMessages.filter(row=>row.category===category);
+    const isShortcut = shortcuts.some(([,name])=>name===category);
+    return screen(`${isShortcut?messageShortcuts(category,allMessages):''}<div class="youke-inbox youke-category-inbox">
       <div class="youke-inbox-list">
       ${messages.length ? messages.map(card).join('') : '<div class="youke-inbox-empty">暂无消息</div>'}
       </div>
-    </div>`,safe(category||'站内信'));
+    </div>${isShortcut?notificationHint():''}`,isShortcut?'消息':safe(category||'站内信'),
+      isShortcut?{back:false,bottom:'messageManagement'}:{});
   };
   pages.messageAuditResult = () => {
     const row = active();
@@ -166,7 +185,7 @@
     const row = active();
     return screen(`<div class="youke-mini-demo"><span>小程序页面演示</span><h2>365获客宝</h2><p>${safe(row?.title||'')}</p><code>${safe(row?.path||'')}</code></div>`,'365获客宝');
   };
-  meta.messageManagement = ['消息管理','客户会话与站内信分类同屏',['最近一条消息','未读提示'],'点击分类查看全部站内信。'];
+  meta.messageManagement = ['消息管理','会话和三类通知入口',['最近一条消息','未读提示'],'点击顶部图标切换列表。'];
   meta.messageMiniProgram = ['365获客宝','小程序跳转示例',['指定页面路径'],'原型模拟打开小程序目标页。'];
   meta.messages = meta.messageManagement;
   meta.messageNotificationSettings = ['通知设置','手机系统通知开关演示',['允许通知'],'返回消息页后按系统权限更新提示。'];
@@ -185,6 +204,20 @@
     if (event.target.closest('[data-toggle-system-notification]')) {
       setSystemNotificationEnabled(!systemNotificationEnabled);
       go('messageNotificationSettings',false);
+      return;
+    }
+    const shortcut = event.target.closest('[data-message-shortcut]');
+    if (shortcut) {
+      const next = shortcut.dataset.messageShortcut;
+      if (shortcut.getAttribute('aria-pressed')==='true') return;
+      if (!next) {
+        if (['messageManagement','messages'].includes(historyStack.at(-1))) back();
+        else go('messageManagement',false);
+        return;
+      }
+      category = next;
+      categoryScroll = 0;
+      go('messageCategory',current!=='messageCategory');
       return;
     }
     const filter = event.target.closest('[data-notice-category]');
